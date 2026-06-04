@@ -5,7 +5,7 @@ home: https://github.com/paperless-ngx/paperless-ngx
 icon: https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750/src-ui/src/assets/logo-notext.svg
 type: application
 version: 0.25.0
-# renovate datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
+# renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
 appVersion: 2.20.15
 kubeVersion: ">=1.22.0-0"
 keywords:

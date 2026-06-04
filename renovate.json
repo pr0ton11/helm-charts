@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "rangeStrategy": "pin",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/charts/paperless-ngx/Chart\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "ghcr.io/paperless-ngx/paperless-ngx"
+      ],
+      "groupName": "paperless-ngx app",
+      "bumpVersions": [
+        {
+          "filePatterns": [
+            "charts/paperless-ngx/Chart.yaml"
+          ],
+          "matchStrings": [
+            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
+          ],
+          "bumpType": "patch"
+        }
+      ]
+    }
+  ]
+}
