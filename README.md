@@ -22,3 +22,15 @@ For Rancher `HelmChart` resources, use:
 spec:
   chart: oci://ghcr.io/pr0ton11/charts/paperless-ngx
 ```
+
+## Renovate Updates
+
+Renovate watches chart application image tags and opens pull requests when upstream images publish new versions.
+For `paperless-ngx`, the Renovate PR should update:
+
+- `charts/paperless-ngx/values.yaml` `image.tag`
+- `charts/paperless-ngx/Chart.yaml` `appVersion`
+- `charts/paperless-ngx/Chart.yaml` chart `version`
+
+The PR must pass the `Charts` CI check before merging into `main`.
+After merge, the release workflow packages the chart and pushes it to GitHub Container Registry.
