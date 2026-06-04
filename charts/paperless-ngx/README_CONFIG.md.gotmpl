@@ -1,0 +1,22 @@
+{{- define "custom.chart.name" -}}
+Paperless-ngx
+{{- end -}}
+
+{{- define "custom.custom.configuration.header" -}}
+## Custom configuration
+{{- end -}}
+
+{{- define "custom.custom.configuration" -}}
+{{ template "custom.custom.configuration.header" . }}
+
+### Database Installation
+
+Paperless-ngx supports PostgreSQL and MariaDB.
+This chart can install PostgreSQL or MariaDB and configure Paperless-ngx automatically.
+See each database section in [`values.yaml`](./values.yaml) for configuration examples.
+
+### Redis-compatible cache
+
+This chart manages a single Redis-compatible cache instance by default using Valkey.
+Existing values under `redis.*` are still accepted for compatibility with the original chart.
+{{- end -}}

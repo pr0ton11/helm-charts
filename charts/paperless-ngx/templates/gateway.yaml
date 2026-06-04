@@ -1,0 +1,53 @@
+{{- if .Values.gateway.main.enabled }}
+{{- $gateway := .Values.gateway.main -}}
+{{- $hosts := $gateway.hosts | default list -}}
+{{- $hostnames := $gateway.hostnames | default list -}}
+{{- range $hosts }}
+{{- if .host }}
+{{- $hostnames = append $hostnames .host }}
+{{- end }}
+{{- end }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "paperless-ngx.fullname" . }}
+  labels:
+    {{- include "paperless-ngx.labels" . | nindent 4 }}
+    {{- with $gateway.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $gateway.parentRefs }}
+  parentRefs:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if $hostnames }}
+  hostnames:
+    {{- range $hostnames | uniq }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- $paths := list }}
+    {{- range $hosts }}
+    {{- range (.paths | default list) }}
+    {{- $paths = append $paths . }}
+    {{- end }}
+    {{- end }}
+    {{- if not $paths }}
+    {{- $paths = append $paths (dict "path" "/" "pathType" "PathPrefix") }}
+    {{- end }}
+    {{- range $paths }}
+    - matches:
+        - path:
+            type: {{ .pathType | default "PathPrefix" }}
+            value: {{ .path | default "/" | quote }}
+      backendRefs:
+        - name: {{ include "paperless-ngx.serviceName" $ }}
+          port: {{ $.Values.service.main.ports.http.port }}
+    {{- end }}
+{{- end }}
