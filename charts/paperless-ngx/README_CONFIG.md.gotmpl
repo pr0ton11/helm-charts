@@ -12,8 +12,38 @@ Paperless-ngx
 ### Database Installation
 
 Paperless-ngx supports PostgreSQL and MariaDB.
-This chart can install PostgreSQL or MariaDB and configure Paperless-ngx automatically.
-See each database section in [`values.yaml`](./values.yaml) for configuration examples.
+
+#### External PostgreSQL
+
+For an existing PostgreSQL server, keep `postgresql.enabled=false` and set the Paperless database settings under `env`.
+The chart will pass those values through unchanged.
+
+```yaml
+postgresql:
+  enabled: false
+
+env:
+  PAPERLESS_DBHOST: postgres.example.invalid
+  PAPERLESS_DBNAME: paperless
+  PAPERLESS_DBUSER: paperless
+  PAPERLESS_DBPASS: change-me
+  PAPERLESS_DBSSLMODE: prefer
+```
+
+#### Bundled PostgreSQL
+
+This chart can install PostgreSQL with the optional `postgresql` subchart and configure Paperless-ngx automatically.
+
+```yaml
+postgresql:
+  enabled: true
+  auth:
+    database: paperless
+    postgresPassword: change-me
+```
+
+MariaDB is also available through the optional `mariadb` subchart.
+See each database section in [`values.yaml`](./values.yaml) for more configuration.
 
 ### Redis-compatible cache
 

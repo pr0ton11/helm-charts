@@ -100,8 +100,13 @@ persistence:
     accessMode: ReadWriteOnce
     size: 4Gi
 
-# -- Enable and configure postgresql database subchart under this key.
-#    If enabled, the app's db envs will be set for you.
+# -- Enable and configure the optional PostgreSQL subchart under this key.
+#    Leave this disabled when using an external PostgreSQL server and configure
+#    Paperless database settings directly under `env`, for example:
+#    PAPERLESS_DBHOST, PAPERLESS_DBNAME, PAPERLESS_DBUSER, PAPERLESS_DBPASS,
+#    and PAPERLESS_DBSSLMODE.
+#    If enabled, the chart will inject the app's db envs for the bundled
+#    PostgreSQL instance.
 #    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
 # @default -- See [values.yaml](./values.yaml)
 postgresql:

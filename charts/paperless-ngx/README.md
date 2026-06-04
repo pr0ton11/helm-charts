@@ -73,8 +73,38 @@ helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx -f values
 ### Database Installation
 
 Paperless-ngx supports PostgreSQL and MariaDB.
-This chart can install PostgreSQL or MariaDB and configure Paperless-ngx automatically.
-See each database section in [`values.yaml`](./values.yaml) for configuration examples.
+
+#### External PostgreSQL
+
+For an existing PostgreSQL server, keep `postgresql.enabled=false` and set the Paperless database settings under `env`.
+The chart will pass those values through unchanged.
+
+```yaml
+postgresql:
+  enabled: false
+
+env:
+  PAPERLESS_DBHOST: postgres.example.invalid
+  PAPERLESS_DBNAME: paperless
+  PAPERLESS_DBUSER: paperless
+  PAPERLESS_DBPASS: change-me
+  PAPERLESS_DBSSLMODE: prefer
+```
+
+#### Bundled PostgreSQL
+
+This chart can install PostgreSQL with the optional `postgresql` subchart and configure Paperless-ngx automatically.
+
+```yaml
+postgresql:
+  enabled: true
+  auth:
+    database: paperless
+    postgresPassword: change-me
+```
+
+MariaDB is also available through the optional `mariadb` subchart.
+See each database section in [`values.yaml`](./values.yaml) for more configuration.
 
 ### Redis-compatible cache
 
@@ -99,7 +129,7 @@ Existing values under `redis.*` are still accepted for compatibility with the or
 | persistence.data | object | See [values.yaml](./values.yaml) | Configure data volume settings for the chart under this key. |
 | persistence.export | object | See [values.yaml](./values.yaml) | Configure export volume settings for the chart under this key. |
 | persistence.media | object | See [values.yaml](./values.yaml) | Configure media volume settings for the chart under this key. |
-| postgresql | object | See [values.yaml](./values.yaml) | Enable and configure postgresql database subchart under this key.    If enabled, the app's db envs will be set for you.    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) |
+| postgresql | object | See [values.yaml](./values.yaml) | Enable and configure the optional PostgreSQL subchart under this key.    Leave this disabled when using an external PostgreSQL server and configure Paperless database settings directly under `env`, for example:    PAPERLESS_DBHOST, PAPERLESS_DBNAME, PAPERLESS_DBUSER, PAPERLESS_DBPASS,    and PAPERLESS_DBSSLMODE.    If enabled, the chart will inject the app's db envs for the bundled    PostgreSQL instance.    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) |
 | redis | object | See [values.yaml](./values.yaml) | Enable and configure chart-managed Redis under this key.    If enabled, the app's Redis env will be set for you. |
 | service.main | object | See [values.yaml](./values.yaml) | Configures service settings for the chart. |
 
