@@ -13,13 +13,12 @@ Personal Helm chart repository for charts that are no longer maintained upstream
 Charts are published to GitHub Container Registry by CI:
 
 ```console
-helm install paperless-ngx oci://ghcr.io/<owner>/charts/paperless-ngx
+helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx
 ```
 
 For Rancher `HelmChart` resources, use:
 
 ```yaml
 spec:
-  chart: oci://ghcr.io/<owner>/charts/paperless-ngx
+  chart: oci://ghcr.io/pr0ton11/charts/paperless-ngx
 ```
-

@@ -36,15 +36,7 @@ To install the chart with the release name `paperless-ngx`
 ### OCI (Recommended)
 
 ```console
-helm install paperless-ngx oci://ghcr.io/<owner>/charts/paperless-ngx
-```
-
-### Traditional
-
-```console
-helm repo add <owner> https://<owner>.github.io/helm-charts
-helm repo update
-helm install paperless-ngx <owner>/paperless-ngx
+helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx
 ```
 
 ## Uninstalling the Chart
@@ -67,13 +59,13 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 ```console
 helm install paperless-ngx \
   --set env.TZ="America/New York" \
-    oci://ghcr.io/<owner>/charts/paperless-ngx
+    oci://ghcr.io/pr0ton11/charts/paperless-ngx
 ```
 
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart.
 
 ```console
-helm install paperless-ngx oci://ghcr.io/<owner>/charts/paperless-ngx -f values.yaml
+helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx -f values.yaml
 ```
 
 ## Custom configuration
