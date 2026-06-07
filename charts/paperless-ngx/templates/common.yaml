@@ -4,16 +4,29 @@ env:
   PAPERLESS_TIME_ZONE: {{ .Values.env.TZ }}
   PAPERLESS_PORT: {{ quote .Values.service.main.ports.http.port }}
 
+  {{- $paperlessURL := "" -}}
+  {{- with .Values.gateway.main }}
+  {{- if .enabled }}
+  {{- $host := "" -}}
+  {{- if .hosts }}
+  {{- $host = (first .hosts).host -}}
+  {{- else if .hostnames }}
+  {{- $host = first .hostnames -}}
+  {{- end }}
+  {{- if $host }}
+  {{- $paperlessURL = printf "%s://%s" (.protocol | default "https") $host -}}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if not $paperlessURL }}
   {{- with .Values.ingress.main }}
   {{- if and .enabled .hosts }}
-  PAPERLESS_URL: http{{ if .tls }}s{{ end }}://{{ (first .hosts).host }}
+  {{- $paperlessURL = printf "http%s://%s" (ternary "s" "" (not (empty .tls))) (first .hosts).host -}}
   {{- end }}
   {{- end }}
-
-  {{- with .Values.gateway.main }}
-  {{- if and .enabled .hosts }}
-  PAPERLESS_URL: {{ .protocol | default "https" }}://{{ (first .hosts).host }}
   {{- end }}
+  {{- if $paperlessURL }}
+  PAPERLESS_URL: {{ $paperlessURL }}
   {{- end }}
 
   {{- if .Values.postgresql.enabled }}

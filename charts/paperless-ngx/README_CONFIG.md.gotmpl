@@ -9,6 +9,49 @@ Paperless-ngx
 {{- define "custom.custom.configuration" -}}
 {{ template "custom.custom.configuration.header" . }}
 
+### Exposing Paperless-ngx
+
+The chart supports Kubernetes Ingress through the bjw-s common chart and Gateway API through a chart-managed `HTTPRoute`.
+Both can be enabled at the same time if you need to publish the app through more than one entry point.
+
+#### Ingress
+
+```yaml
+ingress:
+  main:
+    enabled: true
+    hosts:
+      - host: paperless.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: paperless-example-tls
+        hosts:
+          - paperless.example.com
+```
+
+#### Gateway API
+
+```yaml
+gateway:
+  main:
+    enabled: true
+    protocol: https
+    parentRefs:
+      - name: gateway
+        namespace: gateway-system
+        sectionName: https
+    hosts:
+      - host: paperless.example.com
+        paths:
+          - path: /
+            pathType: PathPrefix
+```
+
+You can also use `gateway.main.hostnames` when all hostnames should use the default `/` prefix route.
+When both ingress and Gateway API are enabled, the chart renders both resources and derives `PAPERLESS_URL` from the Gateway API host.
+
 ### Database Installation
 
 Paperless-ngx supports PostgreSQL and MariaDB.

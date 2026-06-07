@@ -2,7 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750/src-ui/src/assets/logo-notext.svg" align="right" width="92" alt="paperless-ngx logo">
 
-![Version: 0.25.0](https://img.shields.io/badge/Version-0.25.0-informational?style=flat)
+![Version: 0.25.1](https://img.shields.io/badge/Version-0.25.1-informational?style=flat)
 ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat)
 ![AppVersion: 2.20.15](https://img.shields.io/badge/AppVersion-2.20.15-informational?style=flat)
 
@@ -69,6 +69,49 @@ helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx -f values
 ```
 
 ## Custom configuration
+
+### Exposing Paperless-ngx
+
+The chart supports Kubernetes Ingress through the bjw-s common chart and Gateway API through a chart-managed `HTTPRoute`.
+Both can be enabled at the same time if you need to publish the app through more than one entry point.
+
+#### Ingress
+
+```yaml
+ingress:
+  main:
+    enabled: true
+    hosts:
+      - host: paperless.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: paperless-example-tls
+        hosts:
+          - paperless.example.com
+```
+
+#### Gateway API
+
+```yaml
+gateway:
+  main:
+    enabled: true
+    protocol: https
+    parentRefs:
+      - name: gateway
+        namespace: gateway-system
+        sectionName: https
+    hosts:
+      - host: paperless.example.com
+        paths:
+          - path: /
+            pathType: PathPrefix
+```
+
+You can also use `gateway.main.hostnames` when all hostnames should use the default `/` prefix route.
+When both ingress and Gateway API are enabled, the chart renders both resources and derives `PAPERLESS_URL` from the Gateway API host.
 
 ### Database Installation
 
