@@ -5,6 +5,8 @@
 # https://github.com/bjw-s-labs/helm-charts/blob/a081de5/charts/library/common/values.yaml
 #
 
+global: {}
+
 image:
   # -- Image repository
   repository: ghcr.io/paperless-ngx/paperless-ngx

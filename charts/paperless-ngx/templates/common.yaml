@@ -54,7 +54,53 @@ env:
   {{- end }}
   {{- end }}
 {{- end -}}
-{{- $_ := merge .Values (include "paperless-ngx.hardcodedValues" . | fromYaml) -}}
+{{- define "paperless-ngx.commonValues" -}}
+controllers:
+  main:
+    type: deployment
+    containers:
+      main:
+        image:
+          repository: {{ .Values.image.repository }}
+          tag: {{ .Values.image.tag }}
+          pullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+          {{- toYaml (mergeOverwrite (deepCopy .Values.env) ((include "paperless-ngx.hardcodedValues" . | fromYaml).env)) | nindent 10 }}
+        ports:
+          - name: http
+            containerPort: {{ .Values.service.main.ports.http.port }}
+            protocol: TCP
+        probes:
+          liveness:
+            enabled: true
+            type: TCP
+            port: {{ .Values.service.main.ports.http.port }}
+          readiness:
+            enabled: true
+            type: TCP
+            port: {{ .Values.service.main.ports.http.port }}
+          startup:
+            enabled: true
+            type: TCP
+            port: {{ .Values.service.main.ports.http.port }}
+            spec:
+              failureThreshold: 30
+              periodSeconds: 5
+service:
+  main:
+    controller: main
+{{- with .Values.persistence }}
+persistence:
+  {{- range $name, $config := . }}
+  {{- if and (kindIs "map" $config) $config.mountPath }}
+  {{ $name }}:
+    globalMounts:
+      - path: {{ $config.mountPath }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+{{- $_ := mergeOverwrite .Values (include "paperless-ngx.commonValues" . | fromYaml) -}}
 
 {{/* Render the templates */}}
 {{ include "bjw-s.common.loader.all" . }}

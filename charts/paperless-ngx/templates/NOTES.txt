@@ -1,1 +1,1 @@
-{{- include "bjw-s.common.lib.chart.notes" . -}}
+Paperless-ngx has been deployed.
