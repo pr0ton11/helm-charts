@@ -51,6 +51,7 @@ gateway:
   # @default -- See [values.yaml](./values.yaml)
   main:
     enabled: false
+    # -- Scheme used when the chart derives PAPERLESS_URL from the Gateway API host.
     protocol: https
     annotations: {}
     labels: {}
@@ -58,6 +59,8 @@ gateway:
     #   - name: gateway
     #     namespace: gateway-system
     #     sectionName: https
+    # hostnames:
+    #   - chart-example.local
     # hosts:
     #   - host: chart-example.local
     #     paths:
