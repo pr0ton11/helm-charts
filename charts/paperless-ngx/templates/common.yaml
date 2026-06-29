@@ -1,3 +1,10 @@
+{{/* Validate required chart values */}}
+{{- define "paperless-ngx.validateValues" -}}
+{{- if or (not (hasKey .Values.env "PAPERLESS_SECRET_KEY")) (empty (get .Values.env "PAPERLESS_SECRET_KEY")) -}}
+{{- fail "Paperless-ngx v3 requires env.PAPERLESS_SECRET_KEY. Generate one with: python3 -c \"import secrets; print(secrets.token_urlsafe(64))\"" -}}
+{{- end -}}
+{{- end -}}
+
 {{/* Append the hardcoded settings */}}
 {{- define "paperless-ngx.hardcodedValues" -}}
 env:
@@ -51,6 +58,8 @@ env:
       name: {{ .auth.existingSecret | default (printf "%s-mariadb" $.Release.Name) }}
       key: mariadb-password
   {{- end }}
+  {{- else if and (hasKey .Values.env "PAPERLESS_DBHOST") (not (empty (get .Values.env "PAPERLESS_DBHOST"))) (or (not (hasKey .Values.env "PAPERLESS_DBENGINE")) (empty (get .Values.env "PAPERLESS_DBENGINE"))) }}
+  PAPERLESS_DBENGINE: postgresql
   {{- end }}
 
   {{- if .Values.redis.enabled }}
@@ -110,9 +119,10 @@ persistence:
     globalMounts:
       - path: {{ $config.mountPath }}
   {{- end }}
-  {{- end }}
+{{- end }}
 {{- end }}
 {{- end -}}
+{{- include "paperless-ngx.validateValues" . -}}
 {{- $_ := mergeOverwrite .Values (include "paperless-ngx.commonValues" . | fromYaml) -}}
 
 {{/* Render the templates */}}
