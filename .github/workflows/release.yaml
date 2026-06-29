@@ -36,7 +36,7 @@ jobs:
         run: helm dependency build charts/paperless-ngx
 
       - name: Lint
-        run: helm lint charts/paperless-ngx
+        run: helm lint charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 
       - name: Package
         run: helm package charts/paperless-ngx --destination .dist

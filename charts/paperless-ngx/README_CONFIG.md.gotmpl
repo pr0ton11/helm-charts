@@ -9,6 +9,12 @@ Paperless-ngx
 {{- define "custom.custom.configuration" -}}
 {{ template "custom.custom.configuration.header" . }}
 
+### Paperless-ngx v3 upgrade
+
+Chart `0.27.0` updates Paperless-ngx to `3.0.0-beta.rc1`.
+Read the upstream [Paperless-ngx v3 migration guide](https://github.com/paperless-ngx/paperless-ngx/blob/dev/docs/migration-v3.md) and this chart's [0.27.0 migration notes](./MIGRATION_0.27.0.md) before upgrading.
+Paperless-ngx v3 requires `PAPERLESS_SECRET_KEY`; generate one with `python3 -c "import secrets; print(secrets.token_urlsafe(64))"` and set it under `env.PAPERLESS_SECRET_KEY`.
+
 ### Exposing Paperless-ngx
 
 The chart supports Kubernetes Ingress through the bjw-s common chart and Gateway API through a chart-managed `HTTPRoute`.
@@ -66,12 +72,16 @@ postgresql:
   enabled: false
 
 env:
+  PAPERLESS_DBENGINE: postgresql
   PAPERLESS_DBHOST: postgres.example.invalid
   PAPERLESS_DBNAME: paperless
   PAPERLESS_DBUSER: paperless
   PAPERLESS_DBPASS: change-me
-  PAPERLESS_DBSSLMODE: prefer
+  PAPERLESS_DB_OPTIONS: sslmode=require
 ```
+
+For external MariaDB, set `PAPERLESS_DBENGINE: mariadb`.
+For compatibility with common upgrades from `0.26.x`, the chart injects `PAPERLESS_DBENGINE: postgresql` when `PAPERLESS_DBHOST` is set, no bundled database is enabled, and `PAPERLESS_DBENGINE` is not set.
 
 #### Bundled PostgreSQL
 

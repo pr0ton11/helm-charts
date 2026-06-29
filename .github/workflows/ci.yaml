@@ -29,14 +29,22 @@ jobs:
         run: helm dependency build charts/paperless-ngx
 
       - name: Lint
-        run: helm lint charts/paperless-ngx
+        run: helm lint charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
+
+      - name: Reject missing Paperless secret key
+        run: |
+          if helm template paperless-ngx charts/paperless-ngx; then
+            echo "Expected helm template to fail without env.PAPERLESS_SECRET_KEY"
+            exit 1
+          fi
 
       - name: Render default values
-        run: helm template paperless-ngx charts/paperless-ngx
+        run: helm template paperless-ngx charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 
       - name: Render ingress values
         run: >-
           helm template paperless-ms charts/paperless-ngx
+          --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
           --set 'ingress.main.enabled=true'
           --set 'ingress.main.hosts[0].host=paperless.example.invalid'
           --set 'ingress.main.hosts[0].paths[0].path=/'
@@ -46,6 +54,7 @@ jobs:
         run: >-
           helm template paperless-ms charts/paperless-ngx
           --api-versions gateway.networking.k8s.io/v1/HTTPRoute
+          --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
           --set 'ingress.main.enabled=false'
           --set 'gateway.main.enabled=true'
           --set 'gateway.main.parentRefs[0].name=public'

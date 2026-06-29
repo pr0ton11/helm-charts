@@ -2,9 +2,9 @@
 
 <img src="https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750/src-ui/src/assets/logo-notext.svg" align="right" width="92" alt="paperless-ngx logo">
 
-![Version: 0.25.1](https://img.shields.io/badge/Version-0.25.1-informational?style=flat)
+![Version: 0.27.0](https://img.shields.io/badge/Version-0.27.0-informational?style=flat)
 ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat)
-![AppVersion: 2.20.15](https://img.shields.io/badge/AppVersion-2.20.15-informational?style=flat)
+![AppVersion: 3.0.0-beta.rc1](https://img.shields.io/badge/AppVersion-3.0.0--beta.rc1-informational?style=flat)
 
 A community-supported supercharged version of paperless: scan, index and archive all your physical documents
 
@@ -25,9 +25,9 @@ Kubernetes: `>=1.22.0-0`
 
 | Repository | Name | Version |
 |------------|------|---------|
-| <https://bjw-s-labs.github.io/helm-charts> | common | 1.5.1 |
-| <https://charts.bitnami.com/bitnami> | mariadb | 20.1.1 |
-| <https://charts.bitnami.com/bitnami> | postgresql | 14.0.5 |
+| <https://bjw-s-labs.github.io/helm-charts> | common | 5.0.1 |
+| <https://charts.bitnami.com/bitnami> | mariadb | 26.1.6 |
+| <https://charts.bitnami.com/bitnami> | postgresql | 18.7.8 |
 
 ## Installing the Chart
 
@@ -52,7 +52,7 @@ The command removes all the Kubernetes components associated with the chart **in
 ## Configuration
 
 Read through the [values.yaml](./values.yaml) file. It has several commented out suggested values.
-Other values may be used from the [values.yaml](https://github.com/bjw-s-labs/helm-charts/tree/a081de5/charts/library/common/values.yaml) from the [bjw-s common library](https://github.com/bjw-s-labs/helm-charts/tree/a081de5/charts/library/common).
+Other values may be used from the [values.yaml](https://github.com/bjw-s-labs/helm-charts/tree/main/charts/library/common/values.yaml) from the [bjw-s common library](https://github.com/bjw-s-labs/helm-charts/tree/main/charts/library/common).
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
 
@@ -69,6 +69,12 @@ helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx -f values
 ```
 
 ## Custom configuration
+
+### Paperless-ngx v3 upgrade
+
+Chart `0.27.0` updates Paperless-ngx to `3.0.0-beta.rc1`.
+Read the upstream [Paperless-ngx v3 migration guide](https://github.com/paperless-ngx/paperless-ngx/blob/dev/docs/migration-v3.md) and this chart's [0.27.0 migration notes](./MIGRATION_0.27.0.md) before upgrading.
+Paperless-ngx v3 requires `PAPERLESS_SECRET_KEY`; generate one with `python3 -c "import secrets; print(secrets.token_urlsafe(64))"` and set it under `env.PAPERLESS_SECRET_KEY`.
 
 ### Exposing Paperless-ngx
 
@@ -127,12 +133,16 @@ postgresql:
   enabled: false
 
 env:
+  PAPERLESS_DBENGINE: postgresql
   PAPERLESS_DBHOST: postgres.example.invalid
   PAPERLESS_DBNAME: paperless
   PAPERLESS_DBUSER: paperless
   PAPERLESS_DBPASS: change-me
-  PAPERLESS_DBSSLMODE: prefer
+  PAPERLESS_DB_OPTIONS: sslmode=require
 ```
+
+For external MariaDB, set `PAPERLESS_DBENGINE: mariadb`.
+For compatibility with common upgrades from `0.26.x`, the chart injects `PAPERLESS_DBENGINE: postgresql` when `PAPERLESS_DBHOST` is set, no bundled database is enabled, and `PAPERLESS_DBENGINE` is not set.
 
 #### Bundled PostgreSQL
 
@@ -156,7 +166,7 @@ Existing values under `redis.*` are still accepted for compatibility with the or
 
 ## Values
 
-**Important**: When deploying an application Helm chart you can add more values from the bjw-s common library chart [here](https://github.com/bjw-s-labs/helm-charts/tree/a081de5/charts/library/common)
+**Important**: When deploying an application Helm chart you can add more values from the bjw-s common library chart [here](https://github.com/bjw-s-labs/helm-charts/tree/main/charts/library/common)
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -165,14 +175,14 @@ Existing values under `redis.*` are still accepted for compatibility with the or
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | image.repository | string | `"ghcr.io/paperless-ngx/paperless-ngx"` | Image repository |
 | gateway.main | object | See [values.yaml](./values.yaml) | Enable and configure Gateway API HTTPRoute settings for the chart under this key. |
-| image.tag | string | `"2.20.15"` | Image tag |
+| image.tag | string | `"3.0.0-beta.rc1"` | Image tag |
 | ingress.main | object | See [values.yaml](./values.yaml) | Enable and configure ingress settings for the chart under this key. |
 | mariadb | object | See [values.yaml](./values.yaml) | Enable and configure mariadb database subchart under this key.    If enabled, the app's db envs will be set for you.    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/mariadb) |
 | persistence.consume | object | See [values.yaml](./values.yaml) | Configure consume volume settings for the chart under this key. |
 | persistence.data | object | See [values.yaml](./values.yaml) | Configure data volume settings for the chart under this key. |
 | persistence.export | object | See [values.yaml](./values.yaml) | Configure export volume settings for the chart under this key. |
 | persistence.media | object | See [values.yaml](./values.yaml) | Configure media volume settings for the chart under this key. |
-| postgresql | object | See [values.yaml](./values.yaml) | Enable and configure the optional PostgreSQL subchart under this key.    Leave this disabled when using an external PostgreSQL server and configure Paperless database settings directly under `env`, for example:    PAPERLESS_DBHOST, PAPERLESS_DBNAME, PAPERLESS_DBUSER, PAPERLESS_DBPASS,    and PAPERLESS_DBSSLMODE.    If enabled, the chart will inject the app's db envs for the bundled    PostgreSQL instance.    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) |
+| postgresql | object | See [values.yaml](./values.yaml) | Enable and configure the optional PostgreSQL subchart under this key.    Leave this disabled when using an external PostgreSQL server and configure Paperless database settings directly under `env`, for example:    PAPERLESS_DBENGINE, PAPERLESS_DBHOST, PAPERLESS_DBNAME, PAPERLESS_DBUSER,    PAPERLESS_DBPASS, and PAPERLESS_DB_OPTIONS.    If enabled, the chart will inject the app's db envs for the bundled    PostgreSQL instance.    [[ref]](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) |
 | redis | object | See [values.yaml](./values.yaml) | Enable and configure chart-managed Redis under this key.    If enabled, the app's Redis env will be set for you. |
 | service.main | object | See [values.yaml](./values.yaml) | Configures service settings for the chart. |
 

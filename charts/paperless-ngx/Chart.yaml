@@ -4,9 +4,9 @@ description: "A community-supported supercharged version of paperless: scan, ind
 home: https://github.com/paperless-ngx/paperless-ngx
 icon: https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750/src-ui/src/assets/logo-notext.svg
 type: application
-version: 0.25.1
+version: 0.27.0
 # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
-appVersion: 2.20.15
+appVersion: 3.0.0-beta.rc1
 kubeVersion: ">=1.22.0-0"
 keywords:
   - documents
@@ -30,11 +30,11 @@ annotations:
   artifacthub.io/alternativeName: paperless
   artifacthub.io/changes: |-
     - kind: changed
-      description: Update Paperless-ngx to 2.20.15
+      description: Update Paperless-ngx to 3.0.0-beta.rc1
     - kind: added
-      description: Add Gateway API HTTPRoute support
-    - kind: changed
-      description: Replace Bitnami Redis subchart with chart-managed Redis resources
+      description: Require PAPERLESS_SECRET_KEY for Paperless-ngx v3
+    - kind: added
+      description: Add external database compatibility defaults for Paperless-ngx v3
   artifacthub.io/links: |-
     - name: App Source
       url: https://github.com/paperless-ngx/paperless-ngx

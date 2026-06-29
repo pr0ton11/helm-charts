@@ -6,7 +6,7 @@ Personal Helm chart repository for charts that are no longer maintained upstream
 
 | Chart | App Version | Notes |
 | --- | --- | --- |
-| `paperless-ngx` | `2.20.15` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
+| `paperless-ngx` | `3.0.0-beta.rc1` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
 
 ## OCI Usage
 
