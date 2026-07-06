@@ -11,9 +11,9 @@ image:
   # -- Image repository
   repository: ghcr.io/paperless-ngx/paperless-ngx
   # -- Image pull policy
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # -- Image tag
-  tag: 3.0.0-beta.rc1
+  tag: beta
 
 # -- Environment variables [[ref]](https://docs.paperless-ngx.com/configuration/)
 # @default -- See [values.yaml](./values.yaml)

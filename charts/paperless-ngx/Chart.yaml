@@ -4,9 +4,9 @@ description: "A community-supported supercharged version of paperless: scan, ind
 home: https://github.com/paperless-ngx/paperless-ngx
 icon: https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750/src-ui/src/assets/logo-notext.svg
 type: application
-version: 0.27.0
+version: 0.27.1
 # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
-appVersion: 3.0.0-beta.rc1
+appVersion: beta
 kubeVersion: ">=1.22.0-0"
 keywords:
   - documents
@@ -30,7 +30,9 @@ annotations:
   artifacthub.io/alternativeName: paperless
   artifacthub.io/changes: |-
     - kind: changed
-      description: Update Paperless-ngx to 3.0.0-beta.rc1
+      description: Use the Paperless-ngx beta image tag until 3.0.0 is released
+    - kind: changed
+      description: Set the Paperless-ngx image pull policy to Always while using the moving beta tag
     - kind: added
       description: Require PAPERLESS_SECRET_KEY for Paperless-ngx v3
     - kind: added
