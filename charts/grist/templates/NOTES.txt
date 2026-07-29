@@ -1,0 +1,7 @@
+Grist has been deployed.
+
+{{- $defaultEmail := get .Values.env "GRIST_DEFAULT_EMAIL" }}
+{{- if and (kindIs "string" $defaultEmail) (eq $defaultEmail "you@example.com") }}
+Set env.GRIST_DEFAULT_EMAIL to the email address that should own the
+installation before completing first-run setup.
+{{- end }}

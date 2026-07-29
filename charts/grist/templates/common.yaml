@@ -1,0 +1,148 @@
+{{/* Validate required chart values. */}}
+{{- define "grist.validateValues" -}}
+{{- if ne (int .Values.replicaCount) 1 -}}
+  {{- fail "The Grist monolith chart supports exactly one replica because documents use local SQLite files" -}}
+{{- end -}}
+{{- if not .Values.persistence.data.enabled -}}
+  {{- fail "Grist requires persistence.data.enabled=true for durable /persist storage" -}}
+{{- end -}}
+{{- if not .Values.envFrom -}}
+  {{- if or (not (hasKey .Values.env "GRIST_SESSION_SECRET")) (empty (get .Values.env "GRIST_SESSION_SECRET")) -}}
+    {{- fail "Grist requires env.GRIST_SESSION_SECRET or an envFrom source containing it" -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Values owned by the chart rather than the upstream application. */}}
+{{- define "grist.hardcodedValues" -}}
+env:
+  PORT: {{ quote .Values.service.main.ports.http.port }}
+
+  {{- $hasConfiguredHomeURL := and (hasKey .Values.env "APP_HOME_URL") (not (empty (get .Values.env "APP_HOME_URL"))) -}}
+  {{- if not $hasConfiguredHomeURL }}
+  {{- $homeURL := "" -}}
+  {{- with .Values.gateway.main }}
+  {{- if .enabled }}
+  {{- $host := "" -}}
+  {{- if .hosts }}
+  {{- $host = (first .hosts).host -}}
+  {{- else if .hostnames }}
+  {{- $host = first .hostnames -}}
+  {{- end }}
+  {{- if $host }}
+  {{- $homeURL = printf "%s://%s" (.protocol | default "https") $host -}}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if not $homeURL }}
+  {{- with .Values.ingress.main }}
+  {{- if and .enabled .hosts }}
+  {{- $homeURL = printf "http%s://%s" (ternary "s" "" (not (empty .tls))) (first .hosts).host -}}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if $homeURL }}
+  APP_HOME_URL: {{ $homeURL }}
+  {{- end }}
+  {{- end }}
+
+  {{- if .Values.redis.enabled }}
+  {{- with .Values.redis }}
+  {{- $hasRedisURL := and (hasKey $.Values.env "REDIS_URL") (not (empty (get $.Values.env "REDIS_URL"))) -}}
+  {{- if and (not $hasRedisURL) .auth.enabled }}
+  A_REDIS_PASSWORD:
+    secretKeyRef:
+      name: {{ include "grist.redis.secretName" $ }}
+      key: {{ .auth.existingSecretPasswordKey | default "redis-password" }}
+  REDIS_URL: redis://:$(A_REDIS_PASSWORD)@{{ include "grist.redis.serviceName" $ }}:6379/0
+  {{- else if not $hasRedisURL }}
+  REDIS_URL: redis://{{ include "grist.redis.serviceName" $ }}:6379/0
+  {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end -}}
+
+{{- define "grist.commonValues" -}}
+{{- $configuredEnv := dict -}}
+{{- range $name, $value := .Values.env -}}
+  {{- if or (not (kindIs "string" $value)) (ne $value "") -}}
+    {{- $_ := set $configuredEnv $name $value -}}
+  {{- end -}}
+{{- end -}}
+controllers:
+  main:
+    type: deployment
+    replicas: {{ .Values.replicaCount }}
+    strategy: Recreate
+    containers:
+      main:
+        image:
+          repository: {{ .Values.image.repository }}
+          tag: {{ .Values.image.tag }}
+          pullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+          {{- toYaml (mergeOverwrite $configuredEnv ((include "grist.hardcodedValues" . | fromYaml).env)) | nindent 10 }}
+        {{- with .Values.envFrom }}
+        envFrom:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        ports:
+          - name: http
+            containerPort: {{ .Values.service.main.ports.http.port }}
+            protocol: TCP
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        probes:
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /status
+            port: http
+            spec:
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /status?ready=1
+            port: http
+            spec:
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 6
+          startup:
+            enabled: true
+            type: HTTP
+            path: /status?ready=1
+            port: http
+            spec:
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 60
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        targetPort: http
+{{- with .Values.persistence }}
+persistence:
+  {{- range $name, $config := . }}
+  {{- if and (kindIs "map" $config) $config.mountPath }}
+  {{ $name }}:
+    globalMounts:
+      - path: {{ $config.mountPath }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{- include "grist.validateValues" . -}}
+{{- $_ := mergeOverwrite .Values (include "grist.commonValues" . | fromYaml) -}}
+
+{{/* Render the common library templates. */}}
+{{ include "bjw-s.common.loader.all" . }}

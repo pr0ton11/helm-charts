@@ -1,0 +1,39 @@
+apiVersion: v2
+name: grist
+description: "A modern relational spreadsheet"
+home: https://www.getgrist.com
+icon: https://raw.githubusercontent.com/gristlabs/grist-core/v1.7.16/static/icons/favicon.png
+type: application
+version: 0.1.0
+# renovate: datasource=docker depName=gristlabs/grist
+appVersion: 1.7.16
+kubeVersion: ">=1.31.0-0"
+keywords:
+  - database
+  - spreadsheet
+  - collaboration
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.0.1
+sources:
+  - https://github.com/gristlabs/grist-core
+annotations:
+  artifacthub.io/changes: |-
+    - kind: added
+      description: Add a Grist v1.7.16 application chart
+    - kind: added
+      description: Support persistent Grist document and instance storage
+    - kind: added
+      description: Expose external PostgreSQL home database configuration
+    - kind: added
+      description: Support optional chart-managed Redis for sessions, webhooks, notifications, and snapshots
+    - kind: added
+      description: Support Kubernetes Ingress and Gateway API HTTPRoute exposure
+  artifacthub.io/links: |-
+    - name: App Source
+      url: https://github.com/gristlabs/grist-core
+    - name: Documentation
+      url: https://support.getgrist.com/self-managed/
+    - name: Chart Source
+      url: https://github.com/pr0ton11/helm-charts/tree/main/charts/grist

@@ -1,0 +1,4 @@
+env:
+  GRIST_SESSION_SECRET: ci-grist-session-secret
+  GRIST_DEFAULT_EMAIL: admin@example.invalid
+  APP_HOME_URL: https://grist.example.invalid

@@ -31,6 +31,9 @@ jobs:
       - name: Build Documenso dependencies
         run: helm dependency build charts/documenso
 
+      - name: Build Grist dependencies
+        run: helm dependency build charts/grist
+
       - name: Lint Paperless-ngx
         run: helm lint charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 
@@ -106,6 +109,96 @@ jobs:
           --set 'gateway.main.parentRefs[0].namespace=gateway-system'
           --set 'gateway.main.parentRefs[0].sectionName=https'
           --set 'gateway.main.hosts[0].host=sign.example.invalid'
+          --set 'gateway.main.hosts[0].paths[0].path=/'
+          --set 'gateway.main.hosts[0].paths[0].pathType=PathPrefix'
+
+      - name: Lint Grist
+        run: helm lint charts/grist --values .github/fixtures/grist-values.yaml
+
+      - name: Reject missing Grist session secret
+        run: |
+          if helm template grist charts/grist; then
+            echo "Expected helm template to fail without env.GRIST_SESSION_SECRET"
+            exit 1
+          fi
+
+      - name: Reject unsafe Grist storage topology
+        run: |
+          if helm template grist charts/grist \
+            --values .github/fixtures/grist-values.yaml \
+            --set 'replicaCount=2'; then
+            echo "Expected the monolith chart to reject multiple replicas"
+            exit 1
+          fi
+          if helm template grist charts/grist \
+            --values .github/fixtures/grist-values.yaml \
+            --set 'persistence.data.enabled=false'; then
+            echo "Expected the chart to require durable /persist storage"
+            exit 1
+          fi
+
+      - name: Render Grist default values
+        run: helm template grist charts/grist --values .github/fixtures/grist-values.yaml
+
+      - name: Render Grist external PostgreSQL values
+        run: >-
+          helm template grist charts/grist
+          --values .github/fixtures/grist-values.yaml
+          --set 'env.TYPEORM_TYPE=postgres'
+          --set 'env.TYPEORM_DATABASE=grist'
+          --set 'env.TYPEORM_USERNAME=grist'
+          --set 'env.TYPEORM_HOST=postgres.example.invalid'
+          --set 'env.TYPEORM_PORT=5432'
+          --set 'env.TYPEORM_PASSWORD.secretKeyRef.name=grist-postgresql'
+          --set 'env.TYPEORM_PASSWORD.secretKeyRef.key=password'
+
+      - name: Preserve explicit Grist public URL
+        run: |
+          helm template grist charts/grist \
+            --values .github/fixtures/grist-values.yaml \
+            --set 'ingress.main.enabled=true' \
+            --set 'ingress.main.hosts[0].host=route.example.invalid' \
+            --set 'ingress.main.hosts[0].paths[0].path=/' \
+            --set 'ingress.main.hosts[0].paths[0].pathType=Prefix' \
+            | grep -F 'value: https://grist.example.invalid'
+
+      - name: Render Grist environment Secret
+        run: helm template grist charts/grist --set 'envFrom[0].secret=grist-env'
+
+      - name: Render Grist chart-managed Redis
+        run: >-
+          helm template grist charts/grist
+          --values .github/fixtures/grist-values.yaml
+          --set 'redis.enabled=true'
+
+      - name: Render Grist existing Redis Secret
+        run: >-
+          helm template grist charts/grist
+          --values .github/fixtures/grist-values.yaml
+          --set 'redis.enabled=true'
+          --set 'redis.auth.existingSecret=grist-redis-existing'
+
+      - name: Render Grist ingress values
+        run: >-
+          helm template grist charts/grist
+          --values .github/fixtures/grist-values.yaml
+          --set-string 'env.APP_HOME_URL='
+          --set 'ingress.main.enabled=true'
+          --set 'ingress.main.hosts[0].host=grist.example.invalid'
+          --set 'ingress.main.hosts[0].paths[0].path=/'
+          --set 'ingress.main.hosts[0].paths[0].pathType=Prefix'
+
+      - name: Render Grist Gateway API values
+        run: >-
+          helm template grist charts/grist
+          --values .github/fixtures/grist-values.yaml
+          --api-versions gateway.networking.k8s.io/v1/HTTPRoute
+          --set-string 'env.APP_HOME_URL='
+          --set 'gateway.main.enabled=true'
+          --set 'gateway.main.parentRefs[0].name=public'
+          --set 'gateway.main.parentRefs[0].namespace=gateway-system'
+          --set 'gateway.main.parentRefs[0].sectionName=https'
+          --set 'gateway.main.hosts[0].host=grist.example.invalid'
           --set 'gateway.main.hosts[0].paths[0].path=/'
           --set 'gateway.main.hosts[0].paths[0].pathType=PathPrefix'
 

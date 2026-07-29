@@ -28,6 +28,16 @@
       ],
       "extractVersionTemplate": "^v(?<version>.*)$",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/charts/grist/Chart\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
@@ -57,6 +67,23 @@
         {
           "filePatterns": [
             "charts/documenso/Chart.yaml"
+          ],
+          "matchStrings": [
+            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
+          ],
+          "bumpType": "patch"
+        }
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "gristlabs/grist"
+      ],
+      "groupName": "grist app",
+      "bumpVersions": [
+        {
+          "filePatterns": [
+            "charts/grist/Chart.yaml"
           ],
           "matchStrings": [
             "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"

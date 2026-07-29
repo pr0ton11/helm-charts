@@ -38,14 +38,20 @@ jobs:
       - name: Build Documenso dependencies
         run: helm dependency build charts/documenso
 
+      - name: Build Grist dependencies
+        run: helm dependency build charts/grist
+
       - name: Lint Paperless-ngx
         run: helm lint charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 
       - name: Lint Documenso
         run: helm lint charts/documenso --values .github/fixtures/documenso-values.yaml
 
+      - name: Lint Grist
+        run: helm lint charts/grist --values .github/fixtures/grist-values.yaml
+
       - name: Package
-        run: helm package charts/paperless-ngx charts/documenso --destination .dist
+        run: helm package charts/paperless-ngx charts/documenso charts/grist --destination .dist
 
       - name: Login to GHCR
         uses: docker/login-action@v4.5.2
