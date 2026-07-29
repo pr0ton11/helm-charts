@@ -25,10 +25,13 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts
 
-      - name: Build dependencies
+      - name: Build Paperless-ngx dependencies
         run: helm dependency build charts/paperless-ngx
 
-      - name: Lint
+      - name: Build Documenso dependencies
+        run: helm dependency build charts/documenso
+
+      - name: Lint Paperless-ngx
         run: helm lint charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 
       - name: Reject missing Paperless secret key
@@ -38,10 +41,78 @@ jobs:
             exit 1
           fi
 
-      - name: Render default values
+      - name: Lint Documenso
+        run: helm lint charts/documenso --values .github/fixtures/documenso-values.yaml
+
+      - name: Reject missing Documenso environment
+        run: |
+          if helm template documenso charts/documenso; then
+            echo "Expected helm template to fail without the required Documenso environment"
+            exit 1
+          fi
+
+      - name: Reject short Documenso secrets
+        run: |
+          if helm template documenso charts/documenso \
+            --values .github/fixtures/documenso-values.yaml \
+            --set-string 'env.NEXTAUTH_SECRET=short'; then
+            echo "Expected helm template to reject a short NEXTAUTH_SECRET"
+            exit 1
+          fi
+
+      - name: Render Documenso external database values
+        run: helm template documenso charts/documenso --values .github/fixtures/documenso-values.yaml
+
+      - name: Preserve explicit Documenso public URL
+        run: |
+          helm template documenso charts/documenso \
+            --values .github/fixtures/documenso-values.yaml \
+            --set 'ingress.main.enabled=true' \
+            --set 'ingress.main.hosts[0].host=route.example.invalid' \
+            --set 'ingress.main.hosts[0].paths[0].path=/' \
+            --set 'ingress.main.hosts[0].paths[0].pathType=Prefix' \
+            | grep -F 'value: https://sign.example.invalid'
+
+      - name: Render Documenso environment Secret
+        run: helm template documenso charts/documenso --set 'envFrom[0].secret=documenso-env'
+
+      - name: Render Documenso bundled dependencies
+        run: >-
+          helm template documenso charts/documenso
+          --values .github/fixtures/documenso-values.yaml
+          --set-string 'env.NEXT_PRIVATE_DATABASE_URL='
+          --set 'postgresql.enabled=true'
+          --set 'redis.enabled=true'
+          --set-string 'signingCertificate.existingSecret=documenso-signing'
+
+      - name: Render Documenso ingress values
+        run: >-
+          helm template documenso charts/documenso
+          --values .github/fixtures/documenso-values.yaml
+          --set-string 'env.NEXT_PUBLIC_WEBAPP_URL='
+          --set 'ingress.main.enabled=true'
+          --set 'ingress.main.hosts[0].host=sign.example.invalid'
+          --set 'ingress.main.hosts[0].paths[0].path=/'
+          --set 'ingress.main.hosts[0].paths[0].pathType=Prefix'
+
+      - name: Render Documenso Gateway API values
+        run: >-
+          helm template documenso charts/documenso
+          --values .github/fixtures/documenso-values.yaml
+          --api-versions gateway.networking.k8s.io/v1/HTTPRoute
+          --set-string 'env.NEXT_PUBLIC_WEBAPP_URL='
+          --set 'gateway.main.enabled=true'
+          --set 'gateway.main.parentRefs[0].name=public'
+          --set 'gateway.main.parentRefs[0].namespace=gateway-system'
+          --set 'gateway.main.parentRefs[0].sectionName=https'
+          --set 'gateway.main.hosts[0].host=sign.example.invalid'
+          --set 'gateway.main.hosts[0].paths[0].path=/'
+          --set 'gateway.main.hosts[0].paths[0].pathType=PathPrefix'
+
+      - name: Render Paperless-ngx default values
         run: helm template paperless-ngx charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 
-      - name: Render ingress values
+      - name: Render Paperless-ngx ingress values
         run: >-
           helm template paperless-ms charts/paperless-ngx
           --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
@@ -50,7 +121,7 @@ jobs:
           --set 'ingress.main.hosts[0].paths[0].path=/'
           --set 'ingress.main.hosts[0].paths[0].pathType=Prefix'
 
-      - name: Render Gateway API values
+      - name: Render Paperless-ngx Gateway API values
         run: >-
           helm template paperless-ms charts/paperless-ngx
           --api-versions gateway.networking.k8s.io/v1/HTTPRoute

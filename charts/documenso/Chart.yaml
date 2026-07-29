@@ -1,0 +1,43 @@
+apiVersion: v2
+name: documenso
+description: "The open source DocuSign alternative"
+home: https://documenso.com
+icon: https://raw.githubusercontent.com/documenso/documenso/v2.16.0/packages/assets/logo_icon.png
+type: application
+version: 0.1.0
+# renovate: datasource=docker depName=ghcr.io/documenso/documenso
+appVersion: 2.16.0
+kubeVersion: ">=1.31.0-0"
+keywords:
+  - documents
+  - electronic-signature
+  - esignature
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.0.1
+  - name: postgresql
+    version: 18.8.2
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+sources:
+  - https://github.com/documenso/documenso
+annotations:
+  artifacthub.io/changes: |-
+    - kind: added
+      description: Add a Documenso v2.16.0 application chart
+    - kind: added
+      description: Expose the supported Documenso environment configuration
+    - kind: added
+      description: Support external or chart-managed PostgreSQL
+    - kind: added
+      description: Support optional chart-managed Redis 8.8.1 for BullMQ background jobs
+    - kind: added
+      description: Support Kubernetes Ingress and Gateway API HTTPRoute exposure
+  artifacthub.io/links: |-
+    - name: App Source
+      url: https://github.com/documenso/documenso
+    - name: Documentation
+      url: https://docs.documenso.com/docs/self-hosting
+    - name: Chart Source
+      url: https://github.com/pr0ton11/helm-charts/tree/main/charts/documenso
