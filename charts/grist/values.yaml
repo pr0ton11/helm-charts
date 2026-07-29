@@ -1,0 +1,336 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from the bjw-s common library chart. Additional common
+# chart values can be configured alongside the values documented here:
+# https://github.com/bjw-s-labs/helm-charts/blob/a081de5/charts/library/common/values.yaml
+#
+
+global: {}
+
+image:
+  # -- Image repository
+  repository: docker.io/gristlabs/grist
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag
+  tag: 1.7.16
+
+# -- Number of Grist replicas. The default SQLite databases and ReadWriteOnce
+# persistence require a single replica.
+replicaCount: 1
+
+# -- Grist container resource requests. Upstream reports 2 CPU and 8 GiB RAM
+# as a known-good moderate-workload size; tune requests and optional limits for
+# your documents and concurrency.
+# @default -- See [values.yaml](./values.yaml)
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# -- Secrets and ConfigMaps to load as environment variables. When this is
+# non-empty, required-variable validation is skipped because Helm cannot inspect
+# the referenced objects. Explicit `env` entries take precedence over envFrom.
+# @default -- See [values.yaml](./values.yaml)
+envFrom: []
+  # - secret: grist-env
+  # - configMap: grist-env
+
+# -- Grist environment variables.
+# Values may be strings or Kubernetes `valueFrom` references, for example:
+# GRIST_SESSION_SECRET:
+#   secretKeyRef:
+#     name: grist-env
+#     key: GRIST_SESSION_SECRET
+#
+# Main reference:
+# https://github.com/gristlabs/grist-core/blob/v1.7.16/README.md#environment-variables
+# @default -- See [values.yaml](./values.yaml)
+env:
+  # Required session-signing secret. Existing installations must retain it.
+  GRIST_SESSION_SECRET: ""
+
+  # Installation owner. Change this before completing first-run setup.
+  GRIST_DEFAULT_EMAIL: you@example.com
+
+  # Capability-free sandbox that works on amd64 and arm64. Upstream recommends
+  # gVisor when compatible x86 hardware and SYS_PTRACE are available.
+  GRIST_SANDBOX_FLAVOR: pyodide
+
+  # Privacy and outbound version checks.
+  GRIST_TELEMETRY_LEVEL: "off"
+  GRIST_ALLOW_AUTOMATIC_VERSION_CHECKING: "false"
+
+  # Public base URL. The chart derives this when Ingress or Gateway API is
+  # enabled. PORT is derived from service.main.ports.http.port.
+  APP_HOME_URL: ""
+  # APP_HOME_INTERNAL_URL: ""
+  # APP_DOC_URL: ""
+  # APP_DOC_INTERNAL_URL: ""
+  # APP_STATIC_URL: ""
+  # APP_STATIC_INCLUDE_CUSTOM_CSS: "false"
+  # APP_UNTRUSTED_URL: ""
+  # HOME_PORT: ""
+  # GRIST_UNTRUSTED_PORT: ""
+  # GRIST_ROUTER_URL: ""
+  # GRIST_MANAGED_WORKERS: "false"
+  # GRIST_ID_PREFIX: ""
+
+  # Installation and site behavior.
+  # GRIST_BOOT_KEY: ""
+  # GRIST_IN_SERVICE: "false"
+  # GRIST_SINGLE_ORG: ""
+  # GRIST_TEMPLATE_ORG: ""
+  # GRIST_INSTALL_ADMIN_ORG: ""
+  # GRIST_ORG_IN_PATH: "true"
+  # GRIST_FORCE_LOGIN: "false"
+  # GRIST_ANON_PLAYGROUND: "true"
+  # GRIST_PERSONAL_ORGS: "true"
+  # GRIST_ORG_CREATION_ANYONE: "true"
+  # GRIST_DEFAULT_LOCALE: "en-US"
+  # GRIST_DEFAULT_PRODUCT: ""
+  # GRIST_ACTIVATION: ""
+  # GRIST_ACTIVATION_FILE: ""
+  # GRIST_SUPPORT_ANON: "false"
+  # GRIST_SUPPORT_EMAIL: ""
+  # GRIST_LIST_PUBLIC_SITES: "false"
+  # GRIST_MAX_NEW_USER_INVITES_PER_ORG: ""
+  # GRIST_MAX_BILLING_MANAGERS_PER_ORG: ""
+
+  # Server and session behavior.
+  # GRIST_HOST: "0.0.0.0"
+  # GRIST_SESSION_COOKIE: "grist_core"
+  # GRIST_SESSION_DOMAIN: ""
+  # COOKIE_MAX_AGE: ""
+  # GRIST_APP_ROOT: ""
+  # GRIST_INST_DIR: "/persist"
+  # GRIST_DATA_DIR: "/persist/docs"
+  # GRIST_DOCKER_USER: "grist"
+  # GRIST_DOCKER_GROUP: "grist"
+  # GRIST_SERVERS: "home,docs,static"
+  # GRIST_SERVE_SAME_ORIGIN: "true"
+  # GRIST_ADAPT_DOMAIN: "false"
+  # GRIST_DOMAIN: ""
+  # GRIST_HEADERS_TIMEOUT_MS: ""
+  # GRIST_KEEP_ALIVE_TIMEOUT_MS: ""
+  # GRIST_REQUEST_TIMEOUT_MS: ""
+  # GRIST_BROADCAST_TIMEOUT_MS: ""
+  # GRIST_LOG_HTTP: "false"
+  # GRIST_LOG_HTTP_BODY: "false"
+  # GRIST_LOG_AS_JSON: "false"
+  # GRIST_LOG_API_DETAILS: "false"
+  # GRIST_THROTTLE_CPU: "false"
+  # GRIST_ALLOW_DEPRECATED_BARE_ORG_DELETE: "false"
+
+  # Document behavior and limits.
+  # GRIST_ACTION_HISTORY_MAX_ROWS: "1000"
+  # GRIST_ACTION_HISTORY_MAX_BYTES: "1Gb"
+  # GRIST_ATTACHMENT_THRESHOLD_MB: "50"
+  # GRIST_BACKUP_DELAY_SECS: ""
+  # GRIST_MAX_PARALLEL_REQUESTS_PER_DOC: "10"
+  # GRIST_MAX_UPLOAD_ATTACHMENT_MB: ""
+  # GRIST_MAX_UPLOAD_IMPORT_MB: ""
+  # GRIST_SQLITE_MODE: ""
+  # GRIST_EXTERNAL_ATTACHMENTS_MODE: "none"
+  # GRIST_SNAPSHOT_TIME_CAP: ""
+  # GRIST_SNAPSHOT_KEEP: ""
+  # GRIST_TRUTHY_VALUES: ""
+  # GRIST_FALSY_VALUES: ""
+
+  # External home database. Leave unset for SQLite under /persist. Grist 1.7.16
+  # documents PostgreSQL 10 through 16 as supported.
+  # TYPEORM_TYPE: "postgres"
+  # TYPEORM_DATABASE: "grist"
+  # TYPEORM_USERNAME: "grist"
+  # TYPEORM_PASSWORD: ""
+  # TYPEORM_HOST: ""
+  # TYPEORM_PORT: "5432"
+  # TYPEORM_LOGGING: "false"
+  # TYPEORM_EXTRA: ""
+
+  # Redis state store. The chart injects REDIS_URL when redis.enabled=true.
+  # Redis is required for webhooks and notifications and recommended for
+  # snapshot storage.
+  # REDIS_URL: ""
+
+  # S3-compatible snapshot and external attachment storage.
+  # GRIST_DOCS_MINIO_ACCESS_KEY: ""
+  # GRIST_DOCS_MINIO_SECRET_KEY: ""
+  # GRIST_DOCS_MINIO_USE_SSL: "1"
+  # GRIST_DOCS_MINIO_BUCKET: ""
+  # GRIST_DOCS_MINIO_BUCKET_REGION: "us-east-1"
+  # GRIST_DOCS_MINIO_PREFIX: "docs/"
+  # GRIST_DOCS_MINIO_ENDPOINT: ""
+  # GRIST_DOCS_MINIO_PORT: ""
+
+  # Full-edition native cloud storage.
+  # GRIST_DOCS_S3_BUCKET: ""
+  # GRIST_DOCS_S3_PREFIX: ""
+  # AWS_ACCESS_KEY_ID: ""
+  # AWS_SECRET_ACCESS_KEY: ""
+  # AWS_REGION: ""
+  # AZURE_STORAGE_CONNECTION_STRING: ""
+  # GRIST_AZURE_CONTAINER: ""
+  # GRIST_AZURE_PREFIX: ""
+
+  # Email notifications. GRIST_NODEMAILER_CONFIG and sender are JSON strings;
+  # notifications also require REDIS_URL.
+  # GRIST_NODEMAILER_CONFIG: ""
+  # GRIST_NODEMAILER_SENDER: ""
+
+  # Webhooks and outbound requests.
+  # ALLOWED_WEBHOOK_DOMAINS: ""
+  # GRIST_PROXY_FOR_UNTRUSTED_URLS: "direct"
+  # HTTPS_PROXY: ""
+  # GRIST_ENABLE_REQUEST_FUNCTION: "false"
+
+  # Authentication selector and OIDC.
+  # GRIST_LOGIN_SYSTEM_TYPE: ""
+  # GRIST_IDP_EXTRA_PROPS: ""
+  # GRIST_OIDC_SP_HOST: ""
+  # GRIST_OIDC_IDP_ISSUER: ""
+  # GRIST_OIDC_IDP_CLIENT_ID: ""
+  # GRIST_OIDC_IDP_CLIENT_SECRET: ""
+  # GRIST_OIDC_IDP_SCOPES: "openid profile email"
+  # GRIST_OIDC_SP_PROFILE_NAME_ATTR: "name"
+  # GRIST_OIDC_SP_PROFILE_EMAIL_ATTR: "email"
+  # GRIST_OIDC_IDP_ENABLED_PROTECTIONS: "PKCE,STATE"
+  # GRIST_OIDC_IDP_ACR_VALUES: ""
+  # GRIST_OIDC_IDP_EXTRA_CLIENT_METADATA: ""
+  # GRIST_OIDC_SP_IGNORE_EMAIL_VERIFIED: "false"
+  # GRIST_OIDC_IDP_SKIP_END_SESSION_ENDPOINT: "false"
+  # GRIST_OIDC_IDP_END_SESSION_ENDPOINT: ""
+
+  # Forward-auth and SAML configuration. See the linked authentication docs for
+  # the complete provider-specific variables.
+  # GRIST_FORWARD_AUTH_HEADER: ""
+  # GRIST_FORWARD_AUTH_LOGOUT_PATH: ""
+  # GRIST_SAML_SP_HOST: ""
+  # GRIST_SAML_SP_KEY: ""
+  # GRIST_SAML_SP_CERT: ""
+  # GRIST_SAML_IDP_LOGIN: ""
+  # GRIST_SAML_IDP_LOGOUT: ""
+  # GRIST_SAML_IDP_SKIP_SLO: "false"
+  # GRIST_SAML_IDP_CERTS: ""
+  # GRIST_SAML_IDP_UNENCRYPTED: "false"
+  # GRIST_FORWARD_AUTH_LOGIN_PATH: ""
+  # GRIST_IGNORE_SESSION: "false"
+
+  # UI, widgets, plugins, and integrations.
+  # GRIST_WIDGET_LIST_URL: "https://github.com/gristlabs/grist-widget/releases/download/latest/manifest.json"
+  # GRIST_HIDE_UI_ELEMENTS: ""
+  # GRIST_UI_FEATURES: ""
+  # GRIST_PAGE_TITLE_SUFFIX: " - Grist"
+  # GRIST_INCLUDE_CUSTOM_SCRIPT_URL: ""
+  # GRIST_USER_ROOT: ""
+  # GRIST_TRUST_PLUGINS: "false"
+  # GRIST_EXPERIMENTAL_PLUGINS: "false"
+  # GRIST_SKIP_BUNDLED_WIDGETS: "false"
+  # GRIST_ENABLE_SERVICE_ACCOUNTS: "false"
+  # GRIST_ENABLE_SCIM: "false"
+  # GRIST_ENABLE_USER_PRESENCE: "true"
+  # GRIST_PROMCLIENT_PORT: ""
+  # GRIST_OFFER_ALL_LANGUAGES: "false"
+  # GRIST_FEATURE_FORM_FRAMING: "border"
+  # GRIST_OPEN_GRAPH_PREVIEW_IMAGE: ""
+  # GRIST_HELP_CENTER: ""
+  # GRIST_TERMS_OF_SERVICE_URL: ""
+  # FREE_COACHING_CALL_URL: ""
+  # GRIST_CONTACT_SUPPORT_URL: ""
+  # GRIST_ONBOARDING_VIDEO_ID: ""
+  # GRIST_CUSTOM_COMMON_URLS: ""
+
+  # Google integrations and AI Assistant.
+  # GOOGLE_CLIENT_ID: ""
+  # GOOGLE_CLIENT_SECRET: ""
+  # GOOGLE_API_KEY: ""
+  # GOOGLE_DRIVE_SCOPE: ""
+  # ASSISTANT_API_KEY: ""
+  # OPENAI_API_KEY: ""
+  # ASSISTANT_CHAT_COMPLETION_ENDPOINT: ""
+  # ASSISTANT_MODEL: ""
+  # ASSISTANT_LONGER_CONTEXT_MODEL: ""
+
+  # Advanced sandbox controls.
+  # GRIST_SANDBOX: ""
+  # GVISOR_LIMIT_NPROC: ""
+  # GVISOR_LIMIT_MEMORY: ""
+
+service:
+  # -- Configures the Grist service.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    ports:
+      http:
+        port: 8484
+
+ingress:
+  # -- Enable and configure Kubernetes Ingress.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: false
+    annotations: {}
+    # hosts:
+    #   - host: grist.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    # tls:
+    #   - secretName: grist-example-tls
+    #     hosts:
+    #       - grist.example.com
+
+gateway:
+  # -- Enable and configure Gateway API HTTPRoute.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: false
+    protocol: https
+    annotations: {}
+    labels: {}
+    # parentRefs:
+    #   - name: gateway
+    #     namespace: gateway-system
+    #     sectionName: https
+    # hostnames:
+    #   - grist.example.com
+    # hosts:
+    #   - host: grist.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: PathPrefix
+
+# -- Persistent storage mounted at /persist. Upstream requires this for
+# documents, the SQLite home database, sessions, and instance configuration.
+# @default -- See [values.yaml](./values.yaml)
+persistence:
+  data:
+    enabled: true
+    retain: true
+    mountPath: /persist
+    # storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 20Gi
+
+# -- Optional chart-managed Redis. It stores sessions and state and is required
+# for webhooks and notifications and recommended for snapshots.
+# @default -- See [values.yaml](./values.yaml)
+redis:
+  enabled: false
+  image:
+    repository: docker.io/library/redis
+    tag: 8.8.1-alpine
+    pullPolicy: IfNotPresent
+  auth:
+    enabled: true
+    # password: ""
+    # existingSecret: grist-redis
+    # existingSecretPasswordKey: redis-password
+  master:
+    persistence:
+      enabled: false
+      retain: true
+      # storageClass: ""
+      # accessMode: ReadWriteOnce
+      # size: 1Gi
