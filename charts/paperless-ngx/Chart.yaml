@@ -4,9 +4,9 @@ description: "A community-supported supercharged version of paperless: scan, ind
 home: https://github.com/paperless-ngx/paperless-ngx
 icon: https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750/src-ui/src/assets/logo-notext.svg
 type: application
-version: 0.27.1
+version: 0.28.0
 # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
-appVersion: beta
+appVersion: 3.0.4
 kubeVersion: ">=1.22.0-0"
 keywords:
   - documents
@@ -17,11 +17,11 @@ dependencies:
     repository: https://bjw-s-labs.github.io/helm-charts
     version: 5.0.1
   - name: postgresql
-    version: 18.7.11
+    version: 18.8.1
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
   - name: mariadb
-    version: 26.1.7
+    version: 26.2.0
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
 sources:
@@ -30,13 +30,15 @@ annotations:
   artifacthub.io/alternativeName: paperless
   artifacthub.io/changes: |-
     - kind: changed
-      description: Use the Paperless-ngx beta image tag until 3.0.0 is released
+      description: Update Paperless-ngx to the stable 3.0.4 release
     - kind: changed
-      description: Set the Paperless-ngx image pull policy to Always while using the moving beta tag
-    - kind: added
-      description: Require PAPERLESS_SECRET_KEY for Paperless-ngx v3
-    - kind: added
-      description: Add external database compatibility defaults for Paperless-ngx v3
+      description: Restore the image pull policy to IfNotPresent for the fixed release tag
+    - kind: changed
+      description: Update the bundled PostgreSQL chart to 18.8.1
+    - kind: changed
+      description: Update the bundled MariaDB chart to 26.2.0
+    - kind: changed
+      description: Update the bundled Valkey image to 9.1.1-alpine
   artifacthub.io/links: |-
     - name: App Source
       url: https://github.com/paperless-ngx/paperless-ngx
