@@ -1,0 +1,196 @@
+{{/* Validate required chart values. */}}
+{{- define "documenso.validateValues" -}}
+{{- if not .Values.envFrom -}}
+  {{- range $name := list "NEXTAUTH_SECRET" "NEXT_PRIVATE_ENCRYPTION_KEY" "NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY" "NEXT_PRIVATE_SMTP_FROM_ADDRESS" "NEXT_PRIVATE_SMTP_FROM_NAME" -}}
+    {{- if or (not (hasKey $.Values.env $name)) (empty (get $.Values.env $name)) -}}
+      {{- fail (printf "Documenso requires env.%s or an envFrom source containing it" $name) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- range $name := list "NEXTAUTH_SECRET" "NEXT_PRIVATE_ENCRYPTION_KEY" "NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY" -}}
+    {{- $value := get $.Values.env $name -}}
+    {{- if and (kindIs "string" $value) (lt (len $value) 32) -}}
+      {{- fail (printf "Documenso requires env.%s to contain at least 32 characters" $name) -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- $hasPublicURL := and (hasKey .Values.env "NEXT_PUBLIC_WEBAPP_URL") (not (empty (get .Values.env "NEXT_PUBLIC_WEBAPP_URL"))) -}}
+  {{- if and .Values.ingress.main.enabled .Values.ingress.main.hosts -}}
+    {{- $hasPublicURL = true -}}
+  {{- end -}}
+  {{- if and .Values.gateway.main.enabled (or .Values.gateway.main.hosts .Values.gateway.main.hostnames) -}}
+    {{- $hasPublicURL = true -}}
+  {{- end -}}
+  {{- if not $hasPublicURL -}}
+    {{- fail "Documenso requires env.NEXT_PUBLIC_WEBAPP_URL or an enabled Ingress/Gateway API host" -}}
+  {{- end -}}
+
+  {{- $hasDatabaseURL := and (hasKey .Values.env "NEXT_PRIVATE_DATABASE_URL") (not (empty (get .Values.env "NEXT_PRIVATE_DATABASE_URL"))) -}}
+  {{- $canInjectDatabaseURL := and .Values.postgresql.enabled (not .Values.postgresql.auth.existingSecret) -}}
+  {{- if and (not $hasDatabaseURL) (not $canInjectDatabaseURL) -}}
+    {{- fail "Documenso requires env.NEXT_PRIVATE_DATABASE_URL unless bundled PostgreSQL uses chart-managed credentials" -}}
+  {{- end -}}
+
+  {{- $hasRedisURL := and (hasKey .Values.env "NEXT_PRIVATE_REDIS_URL") (not (empty (get .Values.env "NEXT_PRIVATE_REDIS_URL"))) -}}
+  {{- if and .Values.redis.enabled .Values.redis.auth.existingSecret (not $hasRedisURL) -}}
+    {{- fail "Documenso requires env.NEXT_PRIVATE_REDIS_URL when bundled Redis uses auth.existingSecret" -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Values owned by the chart rather than the upstream application. */}}
+{{- define "documenso.hardcodedValues" -}}
+env:
+  PORT: {{ quote .Values.service.main.ports.http.port }}
+
+  {{- if or (not (hasKey .Values.env "NEXT_PRIVATE_INTERNAL_WEBAPP_URL")) (empty (get .Values.env "NEXT_PRIVATE_INTERNAL_WEBAPP_URL")) }}
+  NEXT_PRIVATE_INTERNAL_WEBAPP_URL: http://{{ include "documenso.serviceName" . }}:{{ .Values.service.main.ports.http.port }}
+  {{- end }}
+
+  {{- $webappURL := "" -}}
+  {{- $hasConfiguredWebappURL := and (hasKey .Values.env "NEXT_PUBLIC_WEBAPP_URL") (not (empty (get .Values.env "NEXT_PUBLIC_WEBAPP_URL"))) -}}
+  {{- if not $hasConfiguredWebappURL }}
+  {{- with .Values.gateway.main }}
+  {{- if .enabled }}
+  {{- $host := "" -}}
+  {{- if .hosts }}
+  {{- $host = (first .hosts).host -}}
+  {{- else if .hostnames }}
+  {{- $host = first .hostnames -}}
+  {{- end }}
+  {{- if $host }}
+  {{- $webappURL = printf "%s://%s" (.protocol | default "https") $host -}}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if not $webappURL }}
+  {{- with .Values.ingress.main }}
+  {{- if and .enabled .hosts }}
+  {{- $webappURL = printf "http%s://%s" (ternary "s" "" (not (empty .tls))) (first .hosts).host -}}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if $webappURL }}
+  NEXT_PUBLIC_WEBAPP_URL: {{ $webappURL }}
+  {{- end }}
+  {{- end }}
+
+  {{- if and .Values.postgresql.enabled (not .Values.postgresql.auth.existingSecret) (or (not (hasKey .Values.env "NEXT_PRIVATE_DATABASE_URL")) (empty (get .Values.env "NEXT_PRIVATE_DATABASE_URL"))) }}
+  {{- with .Values.postgresql }}
+  A_POSTGRES_PASSWORD:
+    secretKeyRef:
+      name: {{ .auth.existingSecret | default (printf "%s-postgresql" $.Release.Name) }}
+      key: {{ if .auth.username }}password{{ else }}postgres-password{{ end }}
+  NEXT_PRIVATE_DATABASE_URL: postgresql://{{ default "postgres" .auth.username }}:$(A_POSTGRES_PASSWORD)@{{ $.Release.Name }}-postgresql:5432/{{ .auth.database }}
+  NEXT_PRIVATE_DIRECT_DATABASE_URL: postgresql://{{ default "postgres" .auth.username }}:$(A_POSTGRES_PASSWORD)@{{ $.Release.Name }}-postgresql:5432/{{ .auth.database }}
+  {{- end }}
+  {{- end }}
+
+  {{- if .Values.redis.enabled }}
+  NEXT_PRIVATE_JOBS_PROVIDER: bullmq
+  {{- with .Values.redis }}
+  {{- $hasRedisURL := and (hasKey $.Values.env "NEXT_PRIVATE_REDIS_URL") (not (empty (get $.Values.env "NEXT_PRIVATE_REDIS_URL"))) -}}
+  {{- if and (not $hasRedisURL) .auth.enabled (not .auth.existingSecret) }}
+  A_REDIS_PASSWORD:
+    secretKeyRef:
+      name: {{ include "documenso.redis.secretName" $ }}
+      key: {{ .auth.existingSecretPasswordKey | default "redis-password" }}
+  NEXT_PRIVATE_REDIS_URL: redis://:$(A_REDIS_PASSWORD)@{{ include "documenso.redis.serviceName" $ }}:6379
+  {{- else if and (not $hasRedisURL) (not .auth.enabled) }}
+  NEXT_PRIVATE_REDIS_URL: redis://{{ include "documenso.redis.serviceName" $ }}:6379
+  {{- end }}
+  {{- end }}
+  {{- end }}
+
+  {{- if .Values.signingCertificate.existingSecret }}
+  NEXT_PRIVATE_SIGNING_LOCAL_FILE_PATH: {{ .Values.signingCertificate.mountPath }}
+  {{- end }}
+{{- end -}}
+
+{{- define "documenso.commonValues" -}}
+{{- $configuredEnv := dict -}}
+{{- range $name, $value := .Values.env -}}
+  {{- if or (not (kindIs "string" $value)) (ne $value "") -}}
+    {{- $_ := set $configuredEnv $name $value -}}
+  {{- end -}}
+{{- end -}}
+controllers:
+  main:
+    type: deployment
+    replicas: {{ .Values.replicaCount }}
+    strategy: RollingUpdate
+    rollingUpdate:
+      surge: 1
+      unavailable: "0"
+    containers:
+      main:
+        image:
+          repository: {{ .Values.image.repository }}
+          tag: {{ .Values.image.tag }}
+          pullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+          {{- toYaml (mergeOverwrite $configuredEnv ((include "documenso.hardcodedValues" . | fromYaml).env)) | nindent 10 }}
+        {{- with .Values.envFrom }}
+        envFrom:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        ports:
+          - name: http
+            containerPort: {{ .Values.service.main.ports.http.port }}
+            protocol: TCP
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        probes:
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /api/health
+            port: http
+            spec:
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /api/health
+            port: http
+            spec:
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 3
+          startup:
+            enabled: true
+            type: HTTP
+            path: /api/health
+            port: http
+            spec:
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 30
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        targetPort: http
+{{- if .Values.signingCertificate.existingSecret }}
+persistence:
+  signing-certificate:
+    enabled: true
+    type: secret
+    name: {{ .Values.signingCertificate.existingSecret }}
+    globalMounts:
+      - path: {{ .Values.signingCertificate.mountPath }}
+        subPath: {{ .Values.signingCertificate.key }}
+        readOnly: true
+{{- end }}
+{{- end -}}
+
+{{- include "documenso.validateValues" . -}}
+{{- $_ := mergeOverwrite .Values (include "documenso.commonValues" . | fromYaml) -}}
+
+{{/* Render the common library templates. */}}
+{{ include "bjw-s.common.loader.all" . }}

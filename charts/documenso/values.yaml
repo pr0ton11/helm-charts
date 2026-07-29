@@ -1,0 +1,295 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from the bjw-s common library chart. Additional common
+# chart values can be configured alongside the values documented here:
+# https://github.com/bjw-s-labs/helm-charts/blob/a081de5/charts/library/common/values.yaml
+#
+
+global: {}
+
+image:
+  # -- Image repository
+  repository: ghcr.io/documenso/documenso
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag
+  tag: v2.16.0
+
+# -- Number of Documenso replicas.
+replicaCount: 1
+
+# -- Documenso container resources.
+# @default -- See [values.yaml](./values.yaml)
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# The official image runs as UID/GID 1001.
+defaultPodOptions:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+
+# -- Secrets and ConfigMaps to load as environment variables. When this is
+# non-empty, required-variable validation is skipped because Helm cannot inspect
+# the referenced objects. Explicit `env` entries take precedence over envFrom.
+# @default -- See [values.yaml](./values.yaml)
+envFrom: []
+  # - secret: documenso-env
+  # - configMap: documenso-env
+
+# -- Documenso environment variables.
+# Values may be strings or Kubernetes `valueFrom` references, for example:
+# NEXTAUTH_SECRET:
+#   secretKeyRef:
+#     name: documenso-env
+#     key: NEXTAUTH_SECRET
+#
+# Full reference:
+# https://docs.documenso.com/docs/self-hosting/configuration/environment
+# @default -- See [values.yaml](./values.yaml)
+env:
+  # Required authentication and encryption values. Each key must contain at
+  # least 32 characters. Existing installations must retain the same keys.
+  NEXTAUTH_SECRET: ""
+  NEXT_PRIVATE_ENCRYPTION_KEY: ""
+  NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY: ""
+
+  # Required public URL. The chart derives this automatically when Ingress or
+  # Gateway API is enabled.
+  NEXT_PUBLIC_WEBAPP_URL: ""
+
+  # Required external PostgreSQL URL. The chart injects both database URLs when
+  # postgresql.enabled=true.
+  NEXT_PRIVATE_DATABASE_URL: ""
+  # NEXT_PRIVATE_DIRECT_DATABASE_URL: ""
+
+  # Required sender identity.
+  NEXT_PRIVATE_SMTP_FROM_ADDRESS: ""
+  NEXT_PRIVATE_SMTP_FROM_NAME: ""
+
+  # Server configuration. PORT is derived from service.main.ports.http.port.
+  # Set NEXT_PRIVATE_INTERNAL_WEBAPP_URL here to override its service-derived value.
+  # NEXT_PRIVATE_INTERNAL_WEBAPP_URL: "http://documenso:3000"
+
+  # Google OAuth.
+  # NEXT_PRIVATE_GOOGLE_CLIENT_ID: ""
+  # NEXT_PRIVATE_GOOGLE_CLIENT_SECRET: ""
+
+  # Microsoft OAuth.
+  # NEXT_PRIVATE_MICROSOFT_CLIENT_ID: ""
+  # NEXT_PRIVATE_MICROSOFT_CLIENT_SECRET: ""
+
+  # Generic OIDC.
+  # NEXT_PRIVATE_OIDC_WELL_KNOWN: ""
+  # NEXT_PRIVATE_OIDC_CLIENT_ID: ""
+  # NEXT_PRIVATE_OIDC_CLIENT_SECRET: ""
+  # NEXT_PRIVATE_OIDC_PROVIDER_LABEL: "OIDC"
+  # NEXT_PRIVATE_OIDC_SKIP_VERIFY: "false"
+  # NEXT_PRIVATE_OIDC_PROMPT: "login"
+
+  # Permit specific webhook destinations that resolve to private addresses.
+  # NEXT_PRIVATE_WEBHOOK_SSRF_BYPASS_HOSTS: ""
+
+  # Email transport: smtp-auth, smtp-api, resend, or mailchannels.
+  # NEXT_PRIVATE_SMTP_TRANSPORT: "smtp-auth"
+  # NEXT_PRIVATE_SMTP_HOST: "127.0.0.1"
+  # NEXT_PRIVATE_SMTP_PORT: "587"
+  # NEXT_PRIVATE_SMTP_USERNAME: ""
+  # NEXT_PRIVATE_SMTP_PASSWORD: ""
+  # NEXT_PRIVATE_SMTP_SECURE: "false"
+  # NEXT_PRIVATE_SMTP_UNSAFE_IGNORE_TLS: "false"
+  # NEXT_PRIVATE_SMTP_SERVICE: ""
+  # NEXT_PRIVATE_SMTP_APIKEY_USER: "apikey"
+  # NEXT_PRIVATE_SMTP_APIKEY: ""
+  # NEXT_PRIVATE_RESEND_API_KEY: ""
+  # NEXT_PRIVATE_MAILCHANNELS_API_KEY: ""
+  # NEXT_PRIVATE_MAILCHANNELS_ENDPOINT: "https://api.mailchannels.net/tx/v1/send"
+  # NEXT_PRIVATE_MAILCHANNELS_DKIM_DOMAIN: ""
+  # NEXT_PRIVATE_MAILCHANNELS_DKIM_SELECTOR: ""
+  # NEXT_PRIVATE_MAILCHANNELS_DKIM_PRIVATE_KEY: ""
+
+  # Storage: database or s3.
+  # NEXT_PUBLIC_UPLOAD_TRANSPORT: "database"
+  # NEXT_PUBLIC_DOCUMENT_SIZE_UPLOAD_LIMIT: "5"
+  # NEXT_PRIVATE_UPLOAD_BUCKET: ""
+  # NEXT_PRIVATE_UPLOAD_REGION: "us-east-1"
+  # NEXT_PRIVATE_UPLOAD_ACCESS_KEY_ID: ""
+  # NEXT_PRIVATE_UPLOAD_SECRET_ACCESS_KEY: ""
+  # NEXT_PRIVATE_UPLOAD_ENDPOINT: ""
+  # NEXT_PRIVATE_UPLOAD_FORCE_PATH_STYLE: "false"
+  # NEXT_PRIVATE_UPLOAD_DISTRIBUTION_DOMAIN: ""
+  # NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_ID: ""
+  # NEXT_PRIVATE_UPLOAD_DISTRIBUTION_KEY_CONTENTS: ""
+
+  # Signing transport: local, gcloud-hsm, or csc.
+  # NEXT_PRIVATE_SIGNING_TRANSPORT: "local"
+  # NEXT_PRIVATE_SIGNING_LOCAL_FILE_PATH: "/opt/documenso/cert.p12"
+  # NEXT_PRIVATE_SIGNING_LOCAL_FILE_CONTENTS: ""
+  # NEXT_PRIVATE_SIGNING_PASSPHRASE: ""
+  # NEXT_PRIVATE_SIGNING_GCLOUD_HSM_KEY_PATH: ""
+  # NEXT_PRIVATE_SIGNING_GCLOUD_HSM_PUBLIC_CRT_FILE_PATH: ""
+  # NEXT_PRIVATE_SIGNING_GCLOUD_HSM_PUBLIC_CRT_FILE_CONTENTS: ""
+  # NEXT_PRIVATE_SIGNING_GCLOUD_APPLICATION_CREDENTIALS_CONTENTS: ""
+  # NEXT_PRIVATE_SIGNING_GCLOUD_HSM_CERT_CHAIN_FILE_PATH: ""
+  # NEXT_PRIVATE_SIGNING_GCLOUD_HSM_CERT_CHAIN_CONTENTS: ""
+  # NEXT_PRIVATE_SIGNING_GCLOUD_HSM_SECRET_MANAGER_CERT_PATH: ""
+  # NEXT_PRIVATE_SIGNING_CSC_PROVIDER_BASE_URL: ""
+  # NEXT_PRIVATE_SIGNING_CSC_OAUTH_CLIENT_ID: ""
+  # NEXT_PRIVATE_SIGNING_CSC_OAUTH_CLIENT_SECRET: ""
+  # NEXT_PRIVATE_SIGNING_CSC_SIGNATURE_LEVEL: "AES"
+  # NEXT_PRIVATE_SIGNING_TIMESTAMP_AUTHORITY: ""
+  # NEXT_PUBLIC_SIGNING_CONTACT_INFO: ""
+  # NEXT_PRIVATE_USE_LEGACY_SIGNING_SUBFILTER: "false"
+
+  # Signup and sign-in controls.
+  # NEXT_PUBLIC_DISABLE_SIGNUP: "false"
+  # NEXT_PUBLIC_DISABLE_EMAIL_PASSWORD_SIGNUP: "false"
+  # NEXT_PUBLIC_DISABLE_GOOGLE_SIGNUP: "false"
+  # NEXT_PUBLIC_DISABLE_MICROSOFT_SIGNUP: "false"
+  # NEXT_PUBLIC_DISABLE_OIDC_SIGNUP: "false"
+  # NEXT_PRIVATE_ALLOWED_SIGNUP_DOMAINS: ""
+  # NEXT_PUBLIC_DISABLE_SIGNIN: "false"
+  # NEXT_PUBLIC_DISABLE_EMAIL_PASSWORD_SIGNIN: "false"
+  # NEXT_PUBLIC_DISABLE_GOOGLE_SIGNIN: "false"
+  # NEXT_PUBLIC_DISABLE_MICROSOFT_SIGNIN: "false"
+  # NEXT_PUBLIC_DISABLE_OIDC_SIGNIN: "false"
+  # NEXT_PUBLIC_DISABLE_OIDC_AUTO_REDIRECT: "false"
+  # NEXT_PUBLIC_POSTHOG_KEY: ""
+  # NEXT_PUBLIC_FEATURE_BILLING_ENABLED: "false"
+
+  # Google Vertex AI.
+  # GOOGLE_VERTEX_PROJECT_ID: ""
+  # GOOGLE_VERTEX_API_KEY: ""
+  # GOOGLE_VERTEX_LOCATION: "global"
+
+  # Optional Gotenberg-compatible DOCX conversion.
+  # NEXT_PRIVATE_DOCUMENT_CONVERSION_URL: ""
+  # NEXT_PRIVATE_DOCUMENT_CONVERSION_USERNAME: ""
+  # NEXT_PRIVATE_DOCUMENT_CONVERSION_PASSWORD: ""
+  # NEXT_PRIVATE_DOCUMENT_CONVERSION_TIMEOUT_MS: "30000"
+
+  # Background jobs: local, bullmq, or inngest. The chart injects BullMQ and
+  # Redis settings when redis.enabled=true.
+  # NEXT_PRIVATE_JOBS_PROVIDER: "local"
+  # NEXT_PRIVATE_REDIS_URL: ""
+  # NEXT_PRIVATE_REDIS_PREFIX: "documenso"
+  # NEXT_PRIVATE_BULLMQ_CONCURRENCY: "10"
+  # NEXT_PRIVATE_INNGEST_EVENT_KEY: ""
+  # INNGEST_EVENT_KEY: ""
+  # INNGEST_SIGNING_KEY: ""
+  # NEXT_PRIVATE_INNGEST_APP_ID: ""
+
+  # Telemetry, debugging, and PDF generation.
+  # DOCUMENSO_DISABLE_TELEMETRY: "false"
+  # NEXT_PRIVATE_LOGGER_FILE_PATH: ""
+  # NEXT_PRIVATE_BROWSERLESS_URL: ""
+  # NEXT_PUBLIC_USE_INTERNAL_URL_BROWSERLESS: "false"
+
+  # Enterprise configuration.
+  # NEXT_PRIVATE_DOCUMENSO_LICENSE_KEY: ""
+  # NEXT_PRIVATE_STRIPE_API_KEY: ""
+  # NEXT_PRIVATE_STRIPE_WEBHOOK_SECRET: ""
+  # NEXT_PRIVATE_SES_ACCESS_KEY_ID: ""
+  # NEXT_PRIVATE_SES_SECRET_ACCESS_KEY: ""
+  # NEXT_PRIVATE_SES_REGION: ""
+
+service:
+  # -- Configures the Documenso service.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    ports:
+      http:
+        port: 3000
+
+ingress:
+  # -- Enable and configure Kubernetes Ingress.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: false
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    # hosts:
+    #   - host: sign.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    # tls:
+    #   - secretName: sign-example-tls
+    #     hosts:
+    #       - sign.example.com
+
+gateway:
+  # -- Enable and configure Gateway API HTTPRoute.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: false
+    protocol: https
+    annotations: {}
+    labels: {}
+    # parentRefs:
+    #   - name: gateway
+    #     namespace: gateway-system
+    #     sectionName: https
+    # hostnames:
+    #   - sign.example.com
+    # hosts:
+    #   - host: sign.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: PathPrefix
+
+# -- Mount an existing Secret containing the local signing certificate.
+# The application starts without a certificate, but document signing is
+# unavailable until one of the documented signing transports is configured.
+# @default -- See [values.yaml](./values.yaml)
+signingCertificate:
+  existingSecret: ""
+  key: cert.p12
+  mountPath: /opt/documenso/cert.p12
+
+# -- Optional bundled PostgreSQL. External managed PostgreSQL is recommended for
+# production. When enabled, database URLs are injected automatically.
+# @default -- See [values.yaml](./values.yaml)
+postgresql:
+  enabled: false
+  auth:
+    database: documenso
+    username: documenso
+    password: changeme
+  primary:
+    persistence:
+      enabled: false
+      # storageClass: ""
+      # size: 10Gi
+
+# -- Optional chart-managed Redis for BullMQ background jobs. When enabled,
+# NEXT_PRIVATE_JOBS_PROVIDER and NEXT_PRIVATE_REDIS_URL are injected.
+# @default -- See [values.yaml](./values.yaml)
+redis:
+  enabled: false
+  image:
+    repository: docker.io/library/redis
+    tag: 8.8.1-alpine
+    pullPolicy: IfNotPresent
+  auth:
+    enabled: true
+    # password: ""
+    # existingSecret: documenso-redis
+    # existingSecretPasswordKey: redis-password
+  master:
+    persistence:
+      enabled: false
+      retain: true
+      # storageClass: ""
+      # accessMode: ReadWriteOnce
+      # size: 1Gi

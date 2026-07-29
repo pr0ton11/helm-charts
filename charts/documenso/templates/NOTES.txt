@@ -1,0 +1,6 @@
+Documenso has been deployed.
+
+{{- if not .Values.signingCertificate.existingSecret }}
+Document signing still requires a signing transport. For local signing, create
+a Secret containing cert.p12 and set signingCertificate.existingSecret.
+{{- end }}

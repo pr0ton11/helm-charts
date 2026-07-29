@@ -1,0 +1,124 @@
+{{- if .Values.redis.enabled }}
+{{- $redisName := include "documenso.redis.name" . -}}
+{{- $serviceName := include "documenso.redis.serviceName" . -}}
+{{- $persistence := .Values.redis.master.persistence -}}
+{{- if and .Values.redis.auth.enabled (not .Values.redis.auth.existingSecret) }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "documenso.redis.secretName" . }}
+  labels:
+    {{- include "documenso.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+type: Opaque
+data:
+  {{ .Values.redis.auth.existingSecretPasswordKey | default "redis-password" }}: {{ include "documenso.redis.password" . | b64enc | quote }}
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  labels:
+    {{- include "documenso.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+  selector:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $redisName }}
+  labels:
+    {{- include "documenso.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: redis
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          ports:
+            - name: redis
+              containerPort: 6379
+          {{- if .Values.redis.auth.enabled }}
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "documenso.redis.secretName" . }}
+                  key: {{ .Values.redis.auth.existingSecretPasswordKey | default "redis-password" }}
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - exec redis-server --dir /data --appendonly {{ ternary "yes" "no" $persistence.enabled }} --requirepass "$REDIS_PASSWORD"
+          {{- else }}
+          args:
+            - redis-server
+            - --dir
+            - /data
+            - --appendonly
+            - {{ ternary "yes" "no" $persistence.enabled | quote }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            tcpSocket:
+              port: redis
+          readinessProbe:
+            tcpSocket:
+              port: redis
+      volumes:
+        - name: data
+          {{- if $persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ $redisName }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- if $persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $redisName }}
+  labels:
+    {{- include "documenso.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+  {{- if $persistence.retain }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+spec:
+  accessModes:
+    - {{ $persistence.accessMode | default "ReadWriteOnce" }}
+  {{- with $persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $persistence.size | default "1Gi" }}
+{{- end }}
+{{- end }}

@@ -32,14 +32,20 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts
 
-      - name: Build dependencies
+      - name: Build Paperless-ngx dependencies
         run: helm dependency build charts/paperless-ngx
 
-      - name: Lint
+      - name: Build Documenso dependencies
+        run: helm dependency build charts/documenso
+
+      - name: Lint Paperless-ngx
         run: helm lint charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 
+      - name: Lint Documenso
+        run: helm lint charts/documenso --values .github/fixtures/documenso-values.yaml
+
       - name: Package
-        run: helm package charts/paperless-ngx --destination .dist
+        run: helm package charts/paperless-ngx charts/documenso --destination .dist
 
       - name: Login to GHCR
         uses: docker/login-action@v4.5.2
@@ -49,4 +55,7 @@ jobs:
           password: ${{ github.token }}
 
       - name: Push OCI chart
-        run: helm push .dist/*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
+        run: |
+          for chart_package in .dist/*.tgz; do
+            helm push "$chart_package" oci://ghcr.io/${{ github.repository_owner }}/charts
+          done

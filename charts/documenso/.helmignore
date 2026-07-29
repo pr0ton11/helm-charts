@@ -1,0 +1,7 @@
+.git/
+.gitignore
+.helmignore
+README.md
+README_CONFIG.md.gotmpl
+docs/
+tests/

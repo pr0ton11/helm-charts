@@ -17,6 +17,17 @@
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
       ],
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/charts/documenso/Chart\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
+      ],
+      "extractVersionTemplate": "^v(?<version>.*)$",
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
@@ -29,6 +40,23 @@
         {
           "filePatterns": [
             "charts/paperless-ngx/Chart.yaml"
+          ],
+          "matchStrings": [
+            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
+          ],
+          "bumpType": "patch"
+        }
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "ghcr.io/documenso/documenso"
+      ],
+      "groupName": "documenso app",
+      "bumpVersions": [
+        {
+          "filePatterns": [
+            "charts/documenso/Chart.yaml"
           ],
           "matchStrings": [
             "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"

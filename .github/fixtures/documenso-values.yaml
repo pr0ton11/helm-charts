@@ -1,0 +1,8 @@
+env:
+  NEXTAUTH_SECRET: ci-nextauth-secret-at-least-32-characters
+  NEXT_PRIVATE_ENCRYPTION_KEY: ci-primary-encryption-key-at-least-32-characters
+  NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY: ci-secondary-encryption-key-at-least-32-characters
+  NEXT_PUBLIC_WEBAPP_URL: https://sign.example.invalid
+  NEXT_PRIVATE_DATABASE_URL: postgresql://documenso:password@postgres.example.invalid:5432/documenso
+  NEXT_PRIVATE_SMTP_FROM_ADDRESS: noreply@example.invalid
+  NEXT_PRIVATE_SMTP_FROM_NAME: Documenso
