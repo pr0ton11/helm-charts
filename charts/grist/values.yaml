@@ -14,7 +14,7 @@ image:
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Image tag
-  tag: 1.7.16
+  tag: 1.7.17
 
 # -- Number of Grist replicas. The default SQLite databases and ReadWriteOnce
 # persistence require a single replica.
