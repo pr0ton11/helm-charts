@@ -320,7 +320,7 @@ redis:
   enabled: false
   image:
     repository: docker.io/library/redis
-    tag: 8.8.1-alpine
+    tag: 8.10.0-alpine
     pullPolicy: IfNotPresent
   auth:
     enabled: true
