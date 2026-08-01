@@ -1,0 +1,156 @@
+{{/* Validate required chart values. */}}
+{{- define "mediumauth.validateValues" -}}
+{{- if ne (int .Values.replicaCount) 1 -}}
+  {{- fail "Mediumauth supports exactly one replica because the default database uses a local SQLite file" -}}
+{{- end -}}
+{{- if not .Values.persistence.data.enabled -}}
+  {{- fail "Mediumauth requires persistence.data.enabled=true for durable user and OIDC data" -}}
+{{- end -}}
+{{- if not .Values.envFrom -}}
+  {{- if or (not (hasKey .Values.env "TINYAUTH_AUTH_USERS")) (empty (get .Values.env "TINYAUTH_AUTH_USERS")) -}}
+    {{- fail "Mediumauth requires env.TINYAUTH_AUTH_USERS or an envFrom source containing a bootstrap administrator" -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Values owned by the chart rather than the upstream application. */}}
+{{- define "mediumauth.hardcodedValues" -}}
+env:
+  TINYAUTH_SERVER_PORT: {{ quote .Values.service.main.ports.http.port }}
+  TINYAUTH_SERVER_ADDRESS: "0.0.0.0"
+  {{- if .Values.ingressDiscovery.enabled }}
+  TINYAUTH_LABELPROVIDER: kubernetes
+  {{- else }}
+  TINYAUTH_LABELPROVIDER: none
+  {{- end }}
+
+  {{- $hasConfiguredURL := and (hasKey .Values.env "TINYAUTH_APPURL") (not (empty (get .Values.env "TINYAUTH_APPURL"))) -}}
+  {{- if not $hasConfiguredURL }}
+  {{- $appURL := "" -}}
+  {{- with .Values.gateway.main }}
+  {{- if .enabled }}
+  {{- $host := "" -}}
+  {{- if .hosts }}
+  {{- $host = (first .hosts).host -}}
+  {{- else if .hostnames }}
+  {{- $host = first .hostnames -}}
+  {{- end }}
+  {{- if $host }}
+  {{- $appURL = printf "%s://%s" (.protocol | default "https") $host -}}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if not $appURL }}
+  {{- with .Values.ingress.main }}
+  {{- if and .enabled .hosts }}
+  {{- $appURL = printf "http%s://%s" (ternary "s" "" (not (empty .tls))) (first .hosts).host -}}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- if $appURL }}
+  TINYAUTH_APPURL: {{ $appURL }}
+  {{- end }}
+  {{- end }}
+{{- end -}}
+
+{{- define "mediumauth.commonValues" -}}
+{{- $configuredEnv := dict -}}
+{{- range $name, $value := .Values.env -}}
+  {{- if or (not (kindIs "string" $value)) (ne $value "") -}}
+    {{- $_ := set $configuredEnv $name $value -}}
+  {{- end -}}
+{{- end -}}
+controllers:
+  main:
+    type: deployment
+    replicas: {{ .Values.replicaCount }}
+    strategy: Recreate
+    serviceAccount:
+      identifier: main
+    pod:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    containers:
+      main:
+        image:
+          repository: {{ .Values.image.repository }}
+          tag: {{ .Values.image.tag }}
+          pullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+          {{- toYaml (mergeOverwrite $configuredEnv ((include "mediumauth.hardcodedValues" . | fromYaml).env)) | nindent 10 }}
+        {{- with .Values.envFrom }}
+        envFrom:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        ports:
+          - name: http
+            containerPort: {{ .Values.service.main.ports.http.port }}
+            protocol: TCP
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+        probes:
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /api/healthz
+            port: http
+            spec:
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /api/healthz
+            port: http
+            spec:
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 6
+          startup:
+            enabled: true
+            type: HTTP
+            path: /api/healthz
+            port: http
+            spec:
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 30
+serviceAccount:
+  main:
+    enabled: true
+    forceRename: {{ include "mediumauth.fullname" . }}
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        targetPort: http
+{{- with .Values.persistence }}
+persistence:
+  {{- range $name, $config := . }}
+  {{- if and (kindIs "map" $config) $config.mountPath }}
+  {{ $name }}:
+    globalMounts:
+      - path: {{ $config.mountPath }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{- include "mediumauth.validateValues" . -}}
+{{- $_ := mergeOverwrite .Values (include "mediumauth.commonValues" . | fromYaml) -}}
+
+{{/* Render the common library templates. */}}
+{{ include "bjw-s.common.loader.all" . }}

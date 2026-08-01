@@ -1,0 +1,3 @@
+env:
+  TINYAUTH_AUTH_USERS: 'admin:$2a$10$UdLYoJ5lgPsC0RKqYH/jMua7zIn0g9kPqWmhYayJYLaZQ/FTmH2/u'
+  TINYAUTH_APPURL: https://auth.example.invalid

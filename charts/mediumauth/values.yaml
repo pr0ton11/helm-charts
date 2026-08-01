@@ -1,0 +1,141 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from the bjw-s common library chart. Additional common
+# chart values can be configured alongside the values documented here:
+# https://github.com/bjw-s-labs/helm-charts/blob/a081de5/charts/library/common/values.yaml
+#
+
+global: {}
+
+image:
+  # -- Image repository
+  repository: ghcr.io/pr0ton11/mediumauth
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag
+  tag: 0.1.0
+
+# -- Number of Mediumauth replicas. The SQLite database and ReadWriteOnce
+# persistence require a single replica.
+replicaCount: 1
+
+# -- Mediumauth container resource requests and limits.
+# @default -- See [values.yaml](./values.yaml)
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+
+# -- Secrets and ConfigMaps to load as environment variables. When this is
+# non-empty, bootstrap-user validation is skipped because Helm cannot inspect
+# referenced objects. Explicit `env` entries take precedence over envFrom.
+# @default -- See [values.yaml](./values.yaml)
+envFrom: []
+  # - secret: mediumauth-env
+  # - configMap: mediumauth-env
+
+# -- Mediumauth environment variables. Values may be strings or Kubernetes
+# `valueFrom` references. See the upstream `.env.example` for the full surface.
+# @default -- See [values.yaml](./values.yaml)
+env:
+  # Required for the initial administrator. Use a bcrypt hash and retain `$`
+  # characters exactly, for example `admin:$2a$10$...`. You can remove this
+  # value after the administrator has been imported into the database.
+  TINYAUTH_AUTH_USERS: ""
+
+  # The chart derives this from Ingress or Gateway API when possible.
+  TINYAUTH_APPURL: ""
+
+  # Safe production defaults.
+  TINYAUTH_AUTH_SECURECOOKIE: "true"
+  TINYAUTH_ANALYTICS_ENABLED: "false"
+  TINYAUTH_LOG_JSON: "true"
+
+  # Container defaults use SQLite and durable paths under /data.
+  # TINYAUTH_DATABASE_DRIVER: sqlite
+  # TINYAUTH_DATABASE_PATH: /data/tinyauth.db
+  # TINYAUTH_RESOURCES_PATH: /data/resources
+  # TINYAUTH_OIDC_PRIVATEKEYPATH: /data/oidc/key.pem
+  # TINYAUTH_OIDC_PUBLICKEYPATH: /data/oidc/key.pub
+
+  # Authentication and proxy behavior.
+  # TINYAUTH_AUTH_TRUSTEDPROXIES: ""
+  # TINYAUTH_AUTH_SUBDOMAINSENABLED: "true"
+  # TINYAUTH_AUTH_SESSIONEXPIRY: "86400"
+  # TINYAUTH_AUTH_SESSIONMAXLIFETIME: "0"
+  # TINYAUTH_AUTH_IP_ALLOW: ""
+  # TINYAUTH_AUTH_IP_BLOCK: ""
+  # TINYAUTH_AUTH_IP_BYPASS: ""
+
+  # External PostgreSQL replaces the SQLite database. Put credentials in a
+  # Secret rather than directly in values.
+  # TINYAUTH_DATABASE_DRIVER: postgres
+  # TINYAUTH_DATABASE_PATH:
+  #   secretKeyRef:
+  #     name: mediumauth-postgresql
+  #     key: url
+
+  # OAuth, OIDC, LDAP, Tailscale, UI, and ACL variables can be provided through
+  # this map or envFrom. Their names are documented by upstream.
+
+service:
+  # -- Configures the Mediumauth service.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    ports:
+      http:
+        port: 3000
+
+ingress:
+  # -- Enable and configure Kubernetes Ingress.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: false
+    annotations: {}
+    # hosts:
+    #   - host: auth.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    # tls:
+    #   - secretName: mediumauth-example-tls
+    #     hosts:
+    #       - auth.example.com
+
+gateway:
+  # -- Enable and configure Gateway API HTTPRoute.
+  # @default -- See [values.yaml](./values.yaml)
+  main:
+    enabled: false
+    protocol: https
+    annotations: {}
+    labels: {}
+    # parentRefs:
+    #   - name: gateway
+    #     namespace: gateway-system
+    #     sectionName: https
+    # hostnames:
+    #   - auth.example.com
+    # hosts:
+    #   - host: auth.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: PathPrefix
+
+# -- Persistent storage mounted at /data. It contains the default SQLite
+# database, generated OIDC keys, and served resources.
+# @default -- See [values.yaml](./values.yaml)
+persistence:
+  data:
+    enabled: true
+    retain: true
+    mountPath: /data
+    # storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 1Gi
+
+# -- Allow Mediumauth to discover ACL annotations on all Kubernetes Ingresses.
+# This creates a cluster-scoped role with list/watch/get access to Ingresses.
+ingressDiscovery:
+  enabled: false

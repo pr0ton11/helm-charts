@@ -1,0 +1,38 @@
+apiVersion: v2
+name: mediumauth
+description: "A small authentication server with dynamic local-user management"
+home: https://github.com/pr0ton11/mediumauth
+icon: https://raw.githubusercontent.com/pr0ton11/mediumauth/v0.1.0/assets/logo.png
+type: application
+version: 0.1.0
+# renovate: datasource=docker depName=ghcr.io/pr0ton11/mediumauth
+appVersion: 0.1.0
+kubeVersion: ">=1.31.0-0"
+keywords:
+  - authentication
+  - authorization
+  - forward-auth
+  - oidc
+dependencies:
+  - name: common
+    repository: https://bjw-s-labs.github.io/helm-charts
+    version: 5.0.1
+sources:
+  - https://github.com/pr0ton11/mediumauth
+annotations:
+  artifacthub.io/changes: |-
+    - kind: added
+      description: Add a Mediumauth v0.1.0 application chart
+    - kind: added
+      description: Persist the SQLite database, OIDC keys, and resources under /data
+    - kind: added
+      description: Support environment-based configuration and bootstrap users
+    - kind: added
+      description: Support Kubernetes Ingress and Gateway API HTTPRoute exposure
+    - kind: added
+      description: Support opt-in cluster-wide Ingress label discovery
+  artifacthub.io/links: |-
+    - name: App Source
+      url: https://github.com/pr0ton11/mediumauth
+    - name: Chart Source
+      url: https://github.com/pr0ton11/helm-charts/tree/main/charts/mediumauth

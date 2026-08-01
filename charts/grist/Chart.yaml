@@ -2,11 +2,11 @@ apiVersion: v2
 name: grist
 description: "A modern relational spreadsheet"
 home: https://www.getgrist.com
-icon: https://raw.githubusercontent.com/gristlabs/grist-core/v1.7.16/static/icons/favicon.png
+icon: https://raw.githubusercontent.com/gristlabs/grist-core/v1.7.17/static/icons/favicon.png
 type: application
-version: 0.1.0
+version: 0.1.1
 # renovate: datasource=docker depName=gristlabs/grist
-appVersion: 1.7.16
+appVersion: 1.7.17
 kubeVersion: ">=1.31.0-0"
 keywords:
   - database
@@ -20,8 +20,8 @@ sources:
   - https://github.com/gristlabs/grist-core
 annotations:
   artifacthub.io/changes: |-
-    - kind: added
-      description: Add a Grist v1.7.16 application chart
+    - kind: changed
+      description: Update Grist to v1.7.17
     - kind: added
       description: Support persistent Grist document and instance storage
     - kind: added

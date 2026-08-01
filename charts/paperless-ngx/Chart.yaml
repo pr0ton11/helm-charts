@@ -17,11 +17,11 @@ dependencies:
     repository: https://bjw-s-labs.github.io/helm-charts
     version: 5.0.1
   - name: postgresql
-    version: 18.8.1
+    version: 18.8.5
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
   - name: mariadb
-    version: 26.2.0
+    version: 27.0.1
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
 sources:
@@ -34,9 +34,9 @@ annotations:
     - kind: changed
       description: Restore the image pull policy to IfNotPresent for the fixed release tag
     - kind: changed
-      description: Update the bundled PostgreSQL chart to 18.8.1
+      description: Update the bundled PostgreSQL chart to 18.8.5
     - kind: changed
-      description: Update the bundled MariaDB chart to 26.2.0
+      description: Update the bundled MariaDB chart to 27.0.1
     - kind: changed
       description: Update the bundled Valkey image to 9.1.1-alpine
   artifacthub.io/links: |-
