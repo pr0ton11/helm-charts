@@ -17,7 +17,7 @@ dependencies:
     repository: https://bjw-s-labs.github.io/helm-charts
     version: 5.0.1
   - name: postgresql
-    version: 18.8.2
+    version: 18.8.5
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
 sources:
@@ -29,9 +29,9 @@ annotations:
     - kind: added
       description: Expose the supported Documenso environment configuration
     - kind: added
-      description: Support external or chart-managed PostgreSQL
+      description: Support external or chart-managed PostgreSQL 18.8.5
     - kind: added
-      description: Support optional chart-managed Redis 8.8.1 for BullMQ background jobs
+      description: Support optional chart-managed Redis 8.10.0 for BullMQ background jobs
     - kind: added
       description: Support Kubernetes Ingress and Gateway API HTTPRoute exposure
   artifacthub.io/links: |-

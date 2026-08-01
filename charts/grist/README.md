@@ -1,8 +1,8 @@
 # Grist
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat)
 ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat)
-![AppVersion: 1.7.16](https://img.shields.io/badge/AppVersion-1.7.16-informational?style=flat)
+![AppVersion: 1.7.17](https://img.shields.io/badge/AppVersion-1.7.17-informational?style=flat)
 
 A modern relational spreadsheet
 
@@ -177,7 +177,7 @@ See the [self-managed Grist guide](https://support.getgrist.com/self-managed/) a
 | gateway.main | object | See [values.yaml](./values.yaml) | Enable and configure Gateway API HTTPRoute. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | image.repository | string | `"docker.io/gristlabs/grist"` | Image repository |
-| image.tag | string | `"1.7.16"` | Image tag |
+| image.tag | string | `"1.7.17"` | Image tag |
 | ingress.main | object | See [values.yaml](./values.yaml) | Enable and configure Kubernetes Ingress. |
 | persistence | object | See [values.yaml](./values.yaml) | Persistent Grist instance storage. |
 | redis | object | See [values.yaml](./values.yaml) | Optional chart-managed Redis. |

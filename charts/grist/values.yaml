@@ -14,7 +14,7 @@ image:
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Image tag
-  tag: 1.7.16
+  tag: 1.7.17
 
 # -- Number of Grist replicas. The default SQLite databases and ReadWriteOnce
 # persistence require a single replica.
@@ -45,7 +45,7 @@ envFrom: []
 #     key: GRIST_SESSION_SECRET
 #
 # Main reference:
-# https://github.com/gristlabs/grist-core/blob/v1.7.16/README.md#environment-variables
+# https://github.com/gristlabs/grist-core/blob/v1.7.17/README.md#environment-variables
 # @default -- See [values.yaml](./values.yaml)
 env:
   # Required session-signing secret. Existing installations must retain it.
@@ -138,7 +138,7 @@ env:
   # GRIST_TRUTHY_VALUES: ""
   # GRIST_FALSY_VALUES: ""
 
-  # External home database. Leave unset for SQLite under /persist. Grist 1.7.16
+  # External home database. Leave unset for SQLite under /persist. Grist 1.7.17
   # documents PostgreSQL 10 through 16 as supported.
   # TYPEORM_TYPE: "postgres"
   # TYPEORM_DATABASE: "grist"
@@ -320,7 +320,7 @@ redis:
   enabled: false
   image:
     repository: docker.io/library/redis
-    tag: 8.8.1-alpine
+    tag: 8.10.0-alpine
     pullPolicy: IfNotPresent
   auth:
     enabled: true

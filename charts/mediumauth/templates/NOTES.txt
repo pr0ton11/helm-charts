@@ -1,0 +1,7 @@
+Mediumauth has been deployed.
+
+The bootstrap administrator is imported into the database at startup. After
+the first administrator signs in, you can remove an unnecessary bootstrap
+credential without deleting the database user.
+
+Forward-auth endpoint: http://{{ include "mediumauth.serviceName" . }}:{{ .Values.service.main.ports.http.port }}/api/auth/traefik

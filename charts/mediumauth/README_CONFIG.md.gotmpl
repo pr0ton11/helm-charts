@@ -1,0 +1,121 @@
+{{- define "custom.chart.name" -}}
+Mediumauth
+{{- end -}}
+
+{{- define "custom.custom.configuration.header" -}}
+## Custom configuration
+{{- end -}}
+
+{{- define "custom.custom.configuration" -}}
+{{ template "custom.custom.configuration.header" . }}
+
+### Bootstrap administrator
+
+Mediumauth requires one bootstrap administrator at the first startup.
+Store the bcrypt credential in a Kubernetes Secret:
+
+```yaml
+env:
+  TINYAUTH_AUTH_USERS:
+    secretKeyRef:
+      name: mediumauth-env
+      key: TINYAUTH_AUTH_USERS
+```
+
+You can load a complete Secret instead:
+
+```yaml
+envFrom:
+  - secret: mediumauth-env
+```
+
+The value uses the `username:bcrypt_hash` format.
+Mediumauth imports a new bootstrap user as an administrator.
+It does not replace an existing database record.
+
+After the first administrator signs in, remove the bootstrap credential if it is not necessary.
+This configuration change does not delete the database user.
+
+### Persistence
+
+The `/data` volume contains the SQLite database, OIDC keys, and resources.
+The chart enables and retains this volume by default:
+
+```yaml
+persistence:
+  data:
+    enabled: true
+    retain: true
+    size: 1Gi
+```
+
+The default SQLite database and `ReadWriteOnce` volume support one replica.
+The chart uses a `Recreate` deployment strategy.
+
+### Public URL
+
+The chart derives `TINYAUTH_APPURL` from the first Ingress or Gateway API host.
+An explicit `env.TINYAUTH_APPURL` value has priority.
+
+```yaml
+ingress:
+  main:
+    enabled: true
+    hosts:
+      - host: auth.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: mediumauth-example-tls
+        hosts:
+          - auth.example.com
+```
+
+```yaml
+gateway:
+  main:
+    enabled: true
+    protocol: https
+    parentRefs:
+      - name: gateway
+        namespace: gateway-system
+        sectionName: https
+    hosts:
+      - host: auth.example.com
+        paths:
+          - path: /
+            pathType: PathPrefix
+```
+
+### Ingress discovery
+
+Mediumauth can read ACL annotations from all Kubernetes Ingress resources.
+Enable this function only if you use these annotations:
+
+```yaml
+ingressDiscovery:
+  enabled: true
+```
+
+This value creates a `ClusterRole` and a `ClusterRoleBinding`.
+The role permits `get`, `list`, and `watch` operations on Ingress resources.
+
+### External PostgreSQL
+
+Set `TINYAUTH_DATABASE_DRIVER=postgres` to use an external PostgreSQL database.
+Store the connection URL in a Kubernetes Secret:
+
+```yaml
+env:
+  TINYAUTH_DATABASE_DRIVER: postgres
+  TINYAUTH_DATABASE_PATH:
+    secretKeyRef:
+      name: mediumauth-postgresql
+      key: url
+```
+
+Keep `/data` enabled if Mediumauth stores OIDC keys or resources on the local volume.
+
+See the [Mediumauth environment example](https://github.com/pr0ton11/mediumauth/blob/v0.1.0/.env.example) for all configuration variables.
+{{- end -}}
