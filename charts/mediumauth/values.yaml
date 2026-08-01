@@ -14,10 +14,23 @@ image:
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Image tag
-  tag: 0.1.0
+  tag: 0.2.0
 
-# -- Number of Mediumauth replicas. The SQLite database and ReadWriteOnce
-# persistence require a single replica.
+# -- Required key for database-managed configuration. Configure exactly one
+# source. The value is standard base64 encoding of exactly 32 bytes. Keep the
+# same value for all replicas and all upgrades.
+# @default -- See [values.yaml](./values.yaml)
+configEncryptionKey:
+  # -- Application-level base64 value. The chart writes this value to Secret
+  # stringData, so Kubernetes applies its own base64 layer to Secret.data.
+  value: ""
+  # -- Name of a Secret that already contains the application-level value.
+  existingSecret: ""
+  # -- Key in configEncryptionKey.existingSecret.
+  existingSecretKey: TINYAUTH_CONFIG_ENCRYPTION_KEY
+
+# -- Number of Mediumauth replicas. More than one replica requires a shared
+# PostgreSQL database. SQLite supports one replica only.
 replicaCount: 1
 
 # -- Mediumauth container resource requests and limits.
@@ -29,44 +42,92 @@ resources:
 
 # -- Secrets and ConfigMaps to load as environment variables. When this is
 # non-empty, bootstrap-user validation is skipped because Helm cannot inspect
-# referenced objects. Explicit `env` entries take precedence over envFrom.
+# referenced objects. The configuration encryption key has a separate Secret.
+# Explicit `env` entries take precedence over envFrom.
 # @default -- See [values.yaml](./values.yaml)
 envFrom: []
   # - secret: mediumauth-env
   # - configMap: mediumauth-env
 
-# -- Mediumauth environment variables. Values may be strings or Kubernetes
-# `valueFrom` references. See the upstream `.env.example` for the full surface.
+# -- Mediumauth environment variables. Values can be strings or Kubernetes
+# `valueFrom` references. Do not set TINYAUTH_CONFIG_ENCRYPTION_KEY or
+# TINYAUTH_CONFIG_NEW_ENCRYPTION_KEY here. The chart wires the current key from
+# configEncryptionKey. The new key is for the offline rotation command only.
 # @default -- See [values.yaml](./values.yaml)
 env:
   # Required for the initial administrator. Use a bcrypt hash and retain `$`
   # characters exactly, for example `admin:$2a$10$...`. You can remove this
-  # value after the administrator has been imported into the database.
+  # value after Mediumauth imports the administrator into the database.
   TINYAUTH_AUTH_USERS: ""
+  # TINYAUTH_AUTH_USERATTRIBUTES_admin_EMAIL: admin@example.com
+  # TINYAUTH_AUTH_USERSFILE: /data/users
 
   # The chart derives this from Ingress or Gateway API when possible.
   TINYAUTH_APPURL: ""
 
-  # Safe production defaults.
+  # Deployment-managed authentication and proxy values.
   TINYAUTH_AUTH_SECURECOOKIE: "true"
+  # TINYAUTH_AUTH_SUBDOMAINSENABLED: "true"
+  # TINYAUTH_AUTH_TRUSTEDPROXIES: ""
+
+  # Deployment-managed logging and analytics values.
   TINYAUTH_ANALYTICS_ENABLED: "false"
   TINYAUTH_LOG_JSON: "true"
+  # TINYAUTH_LOG_LEVEL: info
+  # TINYAUTH_LOG_STREAMS_HTTP_ENABLED: "true"
+  # TINYAUTH_LOG_STREAMS_APP_ENABLED: "true"
+  # TINYAUTH_LOG_STREAMS_AUDIT_ENABLED: "false"
 
-  # Container defaults use SQLite and durable paths under /data.
+  # Deployment-managed database and path values. Container defaults use SQLite
+  # and /data. Set TINYAUTH_DATABASE_DRIVER to the literal string "postgres"
+  # before you disable persistence or configure more than one replica.
   # TINYAUTH_DATABASE_DRIVER: sqlite
   # TINYAUTH_DATABASE_PATH: /data/tinyauth.db
+  # TINYAUTH_RESOURCES_ENABLED: "true"
   # TINYAUTH_RESOURCES_PATH: /data/resources
+  # TINYAUTH_CONFIGFILE: ""
+
+  # service.main.ports.http.port configures the server listener port. The chart
+  # configures the address as 0.0.0.0 and the label provider from
+  # ingressDiscovery.enabled.
+
+  # These legacy OIDC paths are deployment-managed and import-only. Mediumauth
+  # imports the private key only when the database has no OIDC signing key.
   # TINYAUTH_OIDC_PRIVATEKEYPATH: /data/oidc/key.pem
   # TINYAUTH_OIDC_PUBLICKEYPATH: /data/oidc/key.pub
 
-  # Authentication and proxy behavior.
-  # TINYAUTH_AUTH_TRUSTEDPROXIES: ""
-  # TINYAUTH_AUTH_SUBDOMAINSENABLED: "true"
+  # Deployment-managed LDAP, Tailscale, and experimental values remain active.
+  # TINYAUTH_LDAP_ADDRESS: ""
+  # TINYAUTH_LDAP_BINDDN: ""
+  # TINYAUTH_LDAP_BINDPASSWORD: ""
+  # TINYAUTH_TAILSCALE_ENABLED: "false"
+  # TINYAUTH_TAILSCALE_APITOKEN: ""
+  # TINYAUTH_EXPERIMENTAL_OAUTHBRIDGEENABLED: "false"
+
+  # DEPRECATED: The values below are import-only in Mediumauth v0.2.0.
+  # Mediumauth imports them only when the database has no managed configuration.
+  # After the import, edit these values at /admin. Later environment changes do
+  # not replace the database document.
   # TINYAUTH_AUTH_SESSIONEXPIRY: "86400"
   # TINYAUTH_AUTH_SESSIONMAXLIFETIME: "0"
+  # TINYAUTH_AUTH_LOGINTIMEOUT: "300"
+  # TINYAUTH_AUTH_LOGINMAXRETRIES: "3"
   # TINYAUTH_AUTH_IP_ALLOW: ""
   # TINYAUTH_AUTH_IP_BLOCK: ""
   # TINYAUTH_AUTH_IP_BYPASS: ""
+  # TINYAUTH_AUTH_ACLS_POLICY: allow
+  # TINYAUTH_APPS_example_CONFIG_DOMAIN: app.example.com
+  # TINYAUTH_OAUTH_WHITELIST: ""
+  # TINYAUTH_OAUTH_AUTOREDIRECT: ""
+  # TINYAUTH_OAUTH_PROVIDERS_github_CLIENTID: ""
+  # TINYAUTH_OAUTH_PROVIDERS_github_CLIENTSECRET: ""
+  # TINYAUTH_OIDC_CLIENTS_example_CLIENTID: ""
+  # TINYAUTH_OIDC_CLIENTS_example_CLIENTSECRET: ""
+  # TINYAUTH_OIDC_CLIENTS_example_TRUSTEDREDIRECTURIS: ""
+  # TINYAUTH_UI_TITLE: Mediumauth
+  # TINYAUTH_UI_FORGOTPASSWORDMESSAGE: ""
+  # TINYAUTH_UI_BACKGROUNDIMAGE: /background.jpg
+  # TINYAUTH_UI_WARNINGSENABLED: "true"
 
   # External PostgreSQL replaces the SQLite database. Put credentials in a
   # Secret rather than directly in values.
@@ -75,9 +136,6 @@ env:
   #   secretKeyRef:
   #     name: mediumauth-postgresql
   #     key: url
-
-  # OAuth, OIDC, LDAP, Tailscale, UI, and ACL variables can be provided through
-  # this map or envFrom. Their names are documented by upstream.
 
 service:
   # -- Configures the Mediumauth service.
@@ -123,8 +181,9 @@ gateway:
     #       - path: /
     #         pathType: PathPrefix
 
-# -- Persistent storage mounted at /data. It contains the default SQLite
-# database, generated OIDC keys, and served resources.
+# -- Persistent storage mounted at /data. SQLite requires this storage for its
+# database. PostgreSQL deployments can disable it. The legacy OIDC private-key
+# file is optional and import-only.
 # @default -- See [values.yaml](./values.yaml)
 persistence:
   data:

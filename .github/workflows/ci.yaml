@@ -208,55 +208,8 @@ jobs:
       - name: Lint Mediumauth
         run: helm lint charts/mediumauth --values .github/fixtures/mediumauth-values.yaml
 
-      - name: Reject missing Mediumauth bootstrap administrator
-        run: |
-          if helm template mediumauth charts/mediumauth; then
-            echo "Expected helm template to fail without a Mediumauth bootstrap administrator"
-            exit 1
-          fi
-
-      - name: Reject unsafe Mediumauth storage topology
-        run: |
-          if helm template mediumauth charts/mediumauth \
-            --values .github/fixtures/mediumauth-values.yaml \
-            --set 'replicaCount=2'; then
-            echo "Expected Mediumauth to reject multiple replicas"
-            exit 1
-          fi
-          if helm template mediumauth charts/mediumauth \
-            --values .github/fixtures/mediumauth-values.yaml \
-            --set 'persistence.data.enabled=false'; then
-            echo "Expected Mediumauth to require durable /data storage"
-            exit 1
-          fi
-
-      - name: Render Mediumauth environment Secret
-        run: helm template mediumauth charts/mediumauth --set 'envFrom[0].secret=mediumauth-env'
-
-      - name: Render Mediumauth ingress values
-        run: >-
-          helm template mediumauth charts/mediumauth
-          --values .github/fixtures/mediumauth-values.yaml
-          --set-string 'env.TINYAUTH_APPURL='
-          --set 'ingress.main.enabled=true'
-          --set 'ingress.main.hosts[0].host=auth.example.invalid'
-          --set 'ingress.main.hosts[0].paths[0].path=/'
-          --set 'ingress.main.hosts[0].paths[0].pathType=Prefix'
-
-      - name: Render Mediumauth Gateway API and discovery RBAC
-        run: >-
-          helm template mediumauth charts/mediumauth
-          --values .github/fixtures/mediumauth-values.yaml
-          --api-versions gateway.networking.k8s.io/v1/HTTPRoute
-          --set-string 'env.TINYAUTH_APPURL='
-          --set 'gateway.main.enabled=true'
-          --set 'gateway.main.parentRefs[0].name=public'
-          --set 'gateway.main.parentRefs[0].namespace=gateway-system'
-          --set 'gateway.main.parentRefs[0].sectionName=https'
-          --set 'gateway.main.hosts[0].host=auth.example.invalid'
-          --set 'gateway.main.hosts[0].paths[0].path=/'
-          --set 'gateway.main.hosts[0].paths[0].pathType=PathPrefix'
-          --set 'ingressDiscovery.enabled=true'
+      - name: Run Mediumauth chart tests
+        run: charts/mediumauth/tests/template_test.sh
 
       - name: Render Paperless-ngx default values
         run: helm template paperless-ngx charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
