@@ -9,89 +9,77 @@ Mediumauth
 {{- define "custom.custom.configuration" -}}
 {{ template "custom.custom.configuration.header" . }}
 
-### Bootstrap administrator
+### Configuration encryption key
 
-Mediumauth requires one bootstrap administrator at the first startup.
-Store the bcrypt credential in a Kubernetes Secret:
+Mediumauth requires `TINYAUTH_CONFIG_ENCRYPTION_KEY` at each startup.
+The value must use standard base64 encoding of exactly 32 bytes.
+All replicas must use the same value.
+
+CAUTION: Keep this key unchanged during normal upgrades.
+A new key cannot decrypt the stored configuration document.
+
+Use an existing Secret:
 
 ```yaml
-env:
-  TINYAUTH_AUTH_USERS:
-    secretKeyRef:
-      name: mediumauth-env
-      key: TINYAUTH_AUTH_USERS
+configEncryptionKey:
+  existingSecret: mediumauth-config
+  existingSecretKey: TINYAUTH_CONFIG_ENCRYPTION_KEY
 ```
 
-You can load a complete Secret instead:
+The chart can also create the Secret from a protected values file:
 
 ```yaml
-envFrom:
-  - secret: mediumauth-env
+configEncryptionKey:
+  value: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 ```
 
-The value uses the `username:bcrypt_hash` format.
-Mediumauth imports a new bootstrap user as an administrator.
-It does not replace an existing database record.
+The generated Secret uses `stringData`.
+When Kubernetes stores the value in `Secret.data`, it applies another base64 layer.
+If you write `Secret.data` directly, base64-encode the application-level value again.
+The chart never generates or rotates the application key.
 
-After the first administrator signs in, remove the bootstrap credential if it is not necessary.
-This configuration change does not delete the database user.
+### Persistence and replicas
 
-### Persistence
+Keep `persistence.data.enabled=true` for SQLite.
+SQLite supports one replica only.
 
-The `/data` volume contains the SQLite database, OIDC keys, and resources.
-The chart enables and retains this volume by default:
+PostgreSQL deployments can disable the PersistentVolume.
+More than one replica requires a shared PostgreSQL database:
 
 ```yaml
+replicaCount: 2
 persistence:
   data:
-    enabled: true
-    retain: true
-    size: 1Gi
+    enabled: false
+env:
+  TINYAUTH_DATABASE_DRIVER: postgres
+  TINYAUTH_DATABASE_PATH:
+    secretKeyRef:
+      name: mediumauth-postgresql
+      key: url
 ```
 
-The default SQLite database and `ReadWriteOnce` volume support one replica.
-The chart uses a `Recreate` deployment strategy.
+The legacy OIDC private-key file is optional and import-only.
+When PostgreSQL stores the OIDC signing key, the legacy file does not require persistence.
+
+### Database-managed configuration
+
+When the database has no managed configuration, Mediumauth imports the legacy values.
+Keep the legacy environment or YAML values during the first v0.2.0 startup.
+
+After the import, edit applications, OAuth, OIDC clients, authentication policies, and UI appearance at `/admin`.
+Later environment changes do not replace the database document.
+Removing legacy values does not delete database-managed configuration.
 
 ### Public URL
 
 The chart derives `TINYAUTH_APPURL` from the first Ingress or Gateway API host.
 An explicit `env.TINYAUTH_APPURL` value has priority.
 
-```yaml
-ingress:
-  main:
-    enabled: true
-    hosts:
-      - host: auth.example.com
-        paths:
-          - path: /
-            pathType: Prefix
-    tls:
-      - secretName: mediumauth-example-tls
-        hosts:
-          - auth.example.com
-```
-
-```yaml
-gateway:
-  main:
-    enabled: true
-    protocol: https
-    parentRefs:
-      - name: gateway
-        namespace: gateway-system
-        sectionName: https
-    hosts:
-      - host: auth.example.com
-        paths:
-          - path: /
-            pathType: PathPrefix
-```
-
 ### Ingress discovery
 
 Mediumauth can read ACL annotations from all Kubernetes Ingress resources.
-Enable this function only if you use these annotations:
+If you use these annotations, enable this function:
 
 ```yaml
 ingressDiscovery:
@@ -101,21 +89,5 @@ ingressDiscovery:
 This value creates a `ClusterRole` and a `ClusterRoleBinding`.
 The role permits `get`, `list`, and `watch` operations on Ingress resources.
 
-### External PostgreSQL
-
-Set `TINYAUTH_DATABASE_DRIVER=postgres` to use an external PostgreSQL database.
-Store the connection URL in a Kubernetes Secret:
-
-```yaml
-env:
-  TINYAUTH_DATABASE_DRIVER: postgres
-  TINYAUTH_DATABASE_PATH:
-    secretKeyRef:
-      name: mediumauth-postgresql
-      key: url
-```
-
-Keep `/data` enabled if Mediumauth stores OIDC keys or resources on the local volume.
-
-See the [Mediumauth environment example](https://github.com/pr0ton11/mediumauth/blob/v0.1.0/.env.example) for all configuration variables.
+See [UPGRADING_0.2.0.md](./UPGRADING_0.2.0.md) before the first v0.2.0 upgrade.
 {{- end -}}

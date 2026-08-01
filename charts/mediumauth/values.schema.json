@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "configEncryptionKey",
+    "replicaCount",
+    "env",
+    "persistence"
+  ],
+  "properties": {
+    "configEncryptionKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "existingSecret",
+        "existingSecretKey"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "existingSecret": {
+          "type": "string"
+        },
+        "existingSecretKey": {
+          "type": "string",
+          "pattern": "^[-._a-zA-Z0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "value": {
+                  "pattern": "^[A-Za-z0-9+/]{43}=$"
+                }
+              }
+            },
+            {
+              "properties": {
+                "existingSecret": {
+                  "minLength": 1
+                },
+                "existingSecretKey": {
+                  "minLength": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "not": {
+            "properties": {
+              "value": {
+                "pattern": "^[A-Za-z0-9+/]{43}=$"
+              },
+              "existingSecret": {
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "envFrom": {
+      "type": "array"
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tag": {
+          "type": ["string", "number"]
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "type": "object",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "retain": {
+              "type": "boolean"
+            },
+            "mountPath": {
+              "type": "string"
+            },
+            "accessMode": {
+              "type": "string"
+            },
+            "size": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "ingressDiscovery": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -18,3 +18,15 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- define "mediumauth.discoveryRoleName" -}}
 {{- printf "%s-%s-ingress-discovery" (include "mediumauth.fullname" .) .Release.Namespace | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "mediumauth.configEncryptionSecretName" -}}
+{{- if .Values.configEncryptionKey.existingSecret -}}
+{{- .Values.configEncryptionKey.existingSecret -}}
+{{- else -}}
+{{- printf "%s-config-encryption" (include "mediumauth.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "mediumauth.configEncryptionSecretKey" -}}
+{{- .Values.configEncryptionKey.existingSecretKey | default "TINYAUTH_CONFIG_ENCRYPTION_KEY" -}}
+{{- end -}}

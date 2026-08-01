@@ -1,10 +1,44 @@
 {{/* Validate required chart values. */}}
 {{- define "mediumauth.validateValues" -}}
-{{- if ne (int .Values.replicaCount) 1 -}}
-  {{- fail "Mediumauth supports exactly one replica because the default database uses a local SQLite file" -}}
+{{- $inlineKey := trim (.Values.configEncryptionKey.value | default "") -}}
+{{- $existingSecret := trim (.Values.configEncryptionKey.existingSecret | default "") -}}
+{{- if and $inlineKey $existingSecret -}}
+  {{- fail "Configure only one of configEncryptionKey.value or configEncryptionKey.existingSecret" -}}
 {{- end -}}
-{{- if not .Values.persistence.data.enabled -}}
-  {{- fail "Mediumauth requires persistence.data.enabled=true for durable user and OIDC data" -}}
+{{- if and (not $inlineKey) (not $existingSecret) -}}
+  {{- fail "Mediumauth requires configEncryptionKey.value or configEncryptionKey.existingSecret" -}}
+{{- end -}}
+{{- if $inlineKey -}}
+  {{- if not (regexMatch "^[A-Za-z0-9+/]{43}=$" $inlineKey) -}}
+    {{- fail "configEncryptionKey.value must be standard base64 encoding of exactly 32 bytes" -}}
+  {{- end -}}
+  {{- if ne (len (b64dec $inlineKey)) 32 -}}
+    {{- fail "configEncryptionKey.value must decode to exactly 32 bytes" -}}
+  {{- end -}}
+{{- end -}}
+{{- if and $existingSecret (empty .Values.configEncryptionKey.existingSecretKey) -}}
+  {{- fail "configEncryptionKey.existingSecretKey is required with configEncryptionKey.existingSecret" -}}
+{{- end -}}
+{{- if and (hasKey .Values.env "TINYAUTH_CONFIG_ENCRYPTION_KEY") (not (empty (get .Values.env "TINYAUTH_CONFIG_ENCRYPTION_KEY"))) -}}
+  {{- fail "Set the current key through configEncryptionKey instead of env.TINYAUTH_CONFIG_ENCRYPTION_KEY" -}}
+{{- end -}}
+{{- if and (hasKey .Values.env "TINYAUTH_CONFIG_NEW_ENCRYPTION_KEY") (not (empty (get .Values.env "TINYAUTH_CONFIG_NEW_ENCRYPTION_KEY"))) -}}
+  {{- fail "Do not set TINYAUTH_CONFIG_NEW_ENCRYPTION_KEY in the Mediumauth Deployment. Use it only with the offline rotate-key command" -}}
+{{- end -}}
+{{- $databaseDriver := "sqlite" -}}
+{{- if and (hasKey .Values.env "TINYAUTH_DATABASE_DRIVER") (not (empty (get .Values.env "TINYAUTH_DATABASE_DRIVER"))) -}}
+  {{- $configuredDriver := get .Values.env "TINYAUTH_DATABASE_DRIVER" -}}
+  {{- if kindIs "string" $configuredDriver -}}
+    {{- $databaseDriver = lower $configuredDriver -}}
+  {{- else if or (not .Values.persistence.data.enabled) (gt (int .Values.replicaCount) 1) -}}
+    {{- fail "Set env.TINYAUTH_DATABASE_DRIVER to the literal string postgres before disabling persistence or using multiple replicas" -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (not .Values.persistence.data.enabled) (ne $databaseDriver "postgres") -}}
+  {{- fail "SQLite requires persistence.data.enabled=true. Only an explicit PostgreSQL deployment can disable it" -}}
+{{- end -}}
+{{- if and (gt (int .Values.replicaCount) 1) (ne $databaseDriver "postgres") -}}
+  {{- fail "replicaCount greater than 1 requires a shared PostgreSQL database" -}}
 {{- end -}}
 {{- if not .Values.envFrom -}}
   {{- if or (not (hasKey .Values.env "TINYAUTH_AUTH_USERS")) (empty (get .Values.env "TINYAUTH_AUTH_USERS")) -}}
@@ -16,6 +50,10 @@
 {{/* Values owned by the chart rather than the upstream application. */}}
 {{- define "mediumauth.hardcodedValues" -}}
 env:
+  TINYAUTH_CONFIG_ENCRYPTION_KEY:
+    secretKeyRef:
+      name: {{ include "mediumauth.configEncryptionSecretName" . }}
+      key: {{ include "mediumauth.configEncryptionSecretKey" . }}
   TINYAUTH_SERVER_PORT: {{ quote .Values.service.main.ports.http.port }}
   TINYAUTH_SERVER_ADDRESS: "0.0.0.0"
   {{- if .Values.ingressDiscovery.enabled }}
@@ -111,7 +149,7 @@ controllers:
           readiness:
             enabled: true
             type: HTTP
-            path: /api/healthz
+            path: /api/readyz
             port: http
             spec:
               initialDelaySeconds: 5
@@ -121,7 +159,7 @@ controllers:
           startup:
             enabled: true
             type: HTTP
-            path: /api/healthz
+            path: /api/readyz
             port: http
             spec:
               periodSeconds: 5

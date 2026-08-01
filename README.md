@@ -8,7 +8,7 @@ Personal Helm chart repository for self-hosted applications without an actively 
 | --- | --- | --- |
 | `documenso` | `2.16.0` | Documenso with external or bundled PostgreSQL and optional Redis-backed jobs. |
 | `grist` | `1.7.17` | Grist with persistent document storage, external PostgreSQL support, and optional Redis state. |
-| `mediumauth` | `0.1.0` | Mediumauth with persistent local users, forward authentication, OAuth, LDAP, and OIDC support. |
+| `mediumauth` | `0.2.0` | Mediumauth with encrypted database-managed configuration, forward authentication, OAuth, LDAP, and OIDC support. |
 | `paperless-ngx` | `3.0.4` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
 
 ## OCI Usage

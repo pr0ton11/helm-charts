@@ -2,11 +2,11 @@ apiVersion: v2
 name: mediumauth
 description: "A small authentication server with dynamic local-user management"
 home: https://github.com/pr0ton11/mediumauth
-icon: https://raw.githubusercontent.com/pr0ton11/mediumauth/v0.1.0/assets/logo.png
+icon: https://raw.githubusercontent.com/pr0ton11/mediumauth/d9e6240/assets/logo.png
 type: application
 version: 0.1.0
 # renovate: datasource=docker depName=ghcr.io/pr0ton11/mediumauth
-appVersion: 0.1.0
+appVersion: 0.2.0
 kubeVersion: ">=1.31.0-0"
 keywords:
   - authentication
@@ -22,9 +22,15 @@ sources:
 annotations:
   artifacthub.io/changes: |-
     - kind: added
-      description: Add a Mediumauth v0.1.0 application chart
+      description: Add a Mediumauth v0.2.0 application chart
     - kind: added
-      description: Persist the SQLite database, OIDC keys, and resources under /data
+      description: Require a stable 32-byte configuration encryption key from a managed or existing Secret
+    - kind: added
+      description: Support PostgreSQL deployments without persistent volume storage
+    - kind: changed
+      description: Use /api/readyz for readiness checks
+    - kind: added
+      description: Persist the SQLite database and optional resources under /data
     - kind: added
       description: Support environment-based configuration and bootstrap users
     - kind: added
