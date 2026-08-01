@@ -17,6 +17,12 @@ grep -F 'stringData:' "$test_dir/sqlite.yaml"
 grep -F 'TINYAUTH_CONFIG_ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="' "$test_dir/sqlite.yaml"
 grep -F 'path: /api/healthz' "$test_dir/sqlite.yaml"
 grep -F 'path: /api/readyz' "$test_dir/sqlite.yaml"
+grep -F 'value: 0.0.0.0' "$test_dir/sqlite.yaml"
+
+# The server listener address can use the IPv6 wildcard for dual-stack Pods.
+helm template mediumauth "$chart" --values "$fixture" \
+  --set-string 'env.TINYAUTH_SERVER_ADDRESS=[::]' >"$test_dir/dual-stack.yaml"
+grep -F "value: '[::]'" "$test_dir/dual-stack.yaml"
 
 # The normal Deployment must use the current key only.
 if grep -F 'TINYAUTH_CONFIG_NEW_ENCRYPTION_KEY' "$test_dir/sqlite.yaml"; then

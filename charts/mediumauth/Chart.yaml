@@ -4,7 +4,7 @@ description: "A small authentication server with dynamic local-user management"
 home: https://github.com/pr0ton11/mediumauth
 icon: https://raw.githubusercontent.com/pr0ton11/mediumauth/d9e6240/assets/logo.png
 type: application
-version: 0.1.0
+version: 0.2.0
 # renovate: datasource=docker depName=ghcr.io/pr0ton11/mediumauth
 appVersion: 0.2.0
 kubeVersion: ">=1.31.0-0"
@@ -29,6 +29,8 @@ annotations:
       description: Support PostgreSQL deployments without persistent volume storage
     - kind: changed
       description: Use /api/readyz for readiness checks
+    - kind: changed
+      description: Allow the server listener address to be configured through chart values
     - kind: added
       description: Persist the SQLite database and optional resources under /data
     - kind: added

@@ -1,6 +1,6 @@
 # Mediumauth
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat)
 ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat)
 ![AppVersion: 0.2.0](https://img.shields.io/badge/AppVersion-0.2.0-informational?style=flat)
 
@@ -166,6 +166,9 @@ Deployment-managed values remain active in the chart:
 - experimental values
 - bootstrap users and user attributes
 - legacy OIDC key paths
+
+Set `env.TINYAUTH_SERVER_ADDRESS` to `[::]` for a dual-stack Pod listener.
+The default value is `0.0.0.0`.
 
 ## Upgrade to v0.2.0
 
