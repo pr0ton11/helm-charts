@@ -55,7 +55,6 @@ env:
       name: {{ include "mediumauth.configEncryptionSecretName" . }}
       key: {{ include "mediumauth.configEncryptionSecretKey" . }}
   TINYAUTH_SERVER_PORT: {{ quote .Values.service.main.ports.http.port }}
-  TINYAUTH_SERVER_ADDRESS: "0.0.0.0"
   {{- if .Values.ingressDiscovery.enabled }}
   TINYAUTH_LABELPROVIDER: kubernetes
   {{- else }}

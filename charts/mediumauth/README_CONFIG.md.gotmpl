@@ -75,6 +75,8 @@ Removing legacy values does not delete database-managed configuration.
 
 The chart derives `TINYAUTH_APPURL` from the first Ingress or Gateway API host.
 An explicit `env.TINYAUTH_APPURL` value has priority.
+Set `env.TINYAUTH_SERVER_ADDRESS` to `[::]` for a dual-stack Pod listener.
+The default value is `0.0.0.0`.
 
 ### Ingress discovery
 

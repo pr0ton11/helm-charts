@@ -88,8 +88,8 @@ env:
   # TINYAUTH_CONFIGFILE: ""
 
   # service.main.ports.http.port configures the server listener port. The chart
-  # configures the address as 0.0.0.0 and the label provider from
-  # ingressDiscovery.enabled.
+  # configures the label provider from ingressDiscovery.enabled.
+  TINYAUTH_SERVER_ADDRESS: "0.0.0.0"
 
   # These legacy OIDC paths are deployment-managed and import-only. Mediumauth
   # imports the private key only when the database has no OIDC signing key.
