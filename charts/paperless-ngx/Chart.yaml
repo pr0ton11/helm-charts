@@ -4,9 +4,9 @@ description: "A community-supported supercharged version of paperless: scan, ind
 home: https://github.com/paperless-ngx/paperless-ngx
 icon: https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/b948750/src-ui/src/assets/logo-notext.svg
 type: application
-version: 0.28.0
+version: 0.28.1
 # renovate: datasource=docker depName=ghcr.io/paperless-ngx/paperless-ngx
-appVersion: 3.0.4
+appVersion: 3.0.5
 kubeVersion: ">=1.22.0-0"
 keywords:
   - documents
