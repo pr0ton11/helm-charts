@@ -14,7 +14,7 @@ image:
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Image tag
-  tag: v2.16.0
+  tag: v2.17.0
 
 # -- Number of Documenso replicas.
 replicaCount: 1
