@@ -4,9 +4,9 @@ description: "The open source DocuSign alternative"
 home: https://documenso.com
 icon: https://raw.githubusercontent.com/documenso/documenso/v2.16.0/packages/assets/logo_icon.png
 type: application
-version: 0.1.0
+version: 0.1.1
 # renovate: datasource=docker depName=ghcr.io/documenso/documenso
-appVersion: 2.16.0
+appVersion: 2.17.0
 kubeVersion: ">=1.31.0-0"
 keywords:
   - documents
