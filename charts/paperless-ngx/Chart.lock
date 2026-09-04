@@ -7,6 +7,6 @@ dependencies:
   version: 18.8.7
 - name: mariadb
   repository: https://charts.bitnami.com/bitnami
-  version: 27.0.4
-digest: sha256:932201a9a34f728423806cf064b23a06e2b42e9fe551e675ea55a1f87a78ed3e
-generated: "2026-08-10T17:24:59.742352831Z"
+  version: 27.0.8
+digest: sha256:9ac45a6a8176c024d2173f6e5eac620e0fc495def4a864d2e8e00b9ef97efe3a
+generated: "2026-09-04T03:05:01.289312071Z"
