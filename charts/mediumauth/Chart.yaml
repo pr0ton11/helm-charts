@@ -16,7 +16,7 @@ keywords:
 dependencies:
   - name: common
     repository: https://bjw-s-labs.github.io/helm-charts
-    version: 5.0.1
+    version: 5.2.1
 sources:
   - https://github.com/pr0ton11/mediumauth
 annotations:
