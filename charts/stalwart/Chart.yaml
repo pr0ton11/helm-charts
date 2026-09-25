@@ -1,0 +1,37 @@
+apiVersion: v2
+name: stalwart
+description: "Helm chart for the Stalwart mail and collaboration server"
+home: https://stalw.art
+type: application
+version: 0.8.0
+# renovate: datasource=docker depName=stalwartlabs/stalwart
+appVersion: v0.16.23
+keywords:
+  - mail
+  - smtp
+  - imap
+  - jmap
+  - stalwart
+sources:
+  - https://github.com/stalwartlabs/stalwart
+  - https://github.com/kgrubb/stalwart-helm-chart
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/changes: |-
+    - kind: added
+      description: Import the kgrubb/stalwart-helm-chart 0.7.19 chart
+    - kind: fixed
+      description: Accept nameOverride and fullnameOverride in the values schema
+    - kind: fixed
+      description: Render the tls-sync sidecar only when mailTls is enabled with an existing Secret
+    - kind: fixed
+      description: Use the chart-managed Secret for tls-sync and bootstrap credentials when no existing Secret is set
+  artifacthub.io/links: |-
+    - name: App Source
+      url: https://github.com/stalwartlabs/stalwart
+    - name: Documentation
+      url: https://stalw.art/docs/cluster/orchestration/kubernetes/
+    - name: Upstream Chart
+      url: https://github.com/kgrubb/stalwart-helm-chart
+    - name: Chart Source
+      url: https://github.com/pr0ton11/helm-charts/tree/main/charts/stalwart

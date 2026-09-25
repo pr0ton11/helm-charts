@@ -4,7 +4,8 @@ description: "A modern relational spreadsheet"
 home: https://www.getgrist.com
 icon: https://raw.githubusercontent.com/gristlabs/grist-core/v1.7.17/static/icons/favicon.png
 type: application
-version: 0.1.2
+version: 0.1.3
+deprecated: true
 # renovate: datasource=docker depName=gristlabs/grist
 appVersion: 1.7.19
 kubeVersion: ">=1.31.0-0"
@@ -20,6 +21,8 @@ sources:
   - https://github.com/gristlabs/grist-core
 annotations:
   artifacthub.io/changes: |-
+    - kind: deprecated
+      description: Deprecate the grist chart; it is no longer maintained
     - kind: changed
       description: Update Grist to v1.7.17
     - kind: added

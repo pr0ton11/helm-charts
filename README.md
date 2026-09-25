@@ -6,10 +6,18 @@ Personal Helm chart repository for self-hosted applications without an actively 
 
 | Chart | App Version | Notes |
 | --- | --- | --- |
-| `documenso` | `2.18.0` | Documenso with external or bundled PostgreSQL and optional Redis-backed jobs. |
-| `grist` | `1.7.19` | Grist with persistent document storage, external PostgreSQL support, and optional Redis state. |
 | `mediumauth` | `0.2.0` | Mediumauth with encrypted database-managed configuration, forward authentication, OAuth, LDAP, and OIDC support. |
 | `paperless-ngx` | `3.2.1` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
+| `stalwart` | `v0.16.23` | Based on `kgrubb/stalwart-helm-chart` and kept values-compatible for existing deployments. |
+
+### Deprecated
+
+These charts are no longer maintained or updated. The last published versions remain available.
+
+| Chart | Last Version | App Version |
+| --- | --- | --- |
+| `documenso` | `0.1.2` | `2.18.0` |
+| `grist` | `0.1.3` | `1.7.19` |
 
 ## OCI Usage
 
@@ -17,9 +25,8 @@ Charts are published to GitHub Container Registry by CI:
 
 ```console
 helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx
-helm install documenso oci://ghcr.io/pr0ton11/charts/documenso -f values.yaml
-helm install grist oci://ghcr.io/pr0ton11/charts/grist -f values.yaml
 helm install mediumauth oci://ghcr.io/pr0ton11/charts/mediumauth -f values.yaml
+helm install stalwart oci://ghcr.io/pr0ton11/charts/stalwart -f values.yaml
 ```
 
 For Rancher `HelmChart` resources, use:
