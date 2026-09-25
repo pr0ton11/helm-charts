@@ -4,7 +4,7 @@ description: "A small authentication server with dynamic local-user management"
 home: https://github.com/pr0ton11/mediumauth
 icon: https://raw.githubusercontent.com/pr0ton11/mediumauth/d9e6240/assets/logo.png
 type: application
-version: 0.2.0
+version: 0.2.1
 # renovate: datasource=docker depName=ghcr.io/pr0ton11/mediumauth
 appVersion: 0.2.0
 kubeVersion: ">=1.31.0-0"
