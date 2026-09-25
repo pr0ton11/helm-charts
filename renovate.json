@@ -21,36 +21,32 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/charts/documenso/Chart\\.yaml$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
-      ],
-      "extractVersionTemplate": "^v(?<version>.*)$",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/charts/grist/Chart\\.yaml$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
-      ],
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
         "/charts/mediumauth/Chart\\.yaml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
       ],
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/charts/stalwart/Chart\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
+      ]
     }
   ],
   "packageRules": [
+    {
+      "description": "Deprecated charts no longer receive updates",
+      "matchFileNames": [
+        "charts/grist/**",
+        "charts/documenso/**"
+      ],
+      "enabled": false
+    },
     {
       "matchPackageNames": [
         "ghcr.io/paperless-ngx/paperless-ngx"
@@ -70,40 +66,6 @@
     },
     {
       "matchPackageNames": [
-        "ghcr.io/documenso/documenso"
-      ],
-      "groupName": "documenso app",
-      "bumpVersions": [
-        {
-          "filePatterns": [
-            "charts/documenso/Chart.yaml"
-          ],
-          "matchStrings": [
-            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
-          ],
-          "bumpType": "patch"
-        }
-      ]
-    },
-    {
-      "matchPackageNames": [
-        "gristlabs/grist"
-      ],
-      "groupName": "grist app",
-      "bumpVersions": [
-        {
-          "filePatterns": [
-            "charts/grist/Chart.yaml"
-          ],
-          "matchStrings": [
-            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
-          ],
-          "bumpType": "patch"
-        }
-      ]
-    },
-    {
-      "matchPackageNames": [
         "ghcr.io/pr0ton11/mediumauth"
       ],
       "groupName": "mediumauth app",
@@ -111,6 +73,23 @@
         {
           "filePatterns": [
             "charts/mediumauth/Chart.yaml"
+          ],
+          "matchStrings": [
+            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
+          ],
+          "bumpType": "patch"
+        }
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "stalwartlabs/stalwart"
+      ],
+      "groupName": "stalwart app",
+      "bumpVersions": [
+        {
+          "filePatterns": [
+            "charts/stalwart/Chart.yaml"
           ],
           "matchStrings": [
             "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"

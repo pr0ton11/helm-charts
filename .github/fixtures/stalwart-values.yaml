@@ -1,0 +1,52 @@
+# Mirrors an existing deployment of the upstream chart 0.1.0 with an external PostgreSQL DataStore.
+fullnameOverride: stalwart
+
+image:
+  repository: stalwartlabs/stalwart
+  tag: "v0.16.20"
+  pullPolicy: IfNotPresent
+
+recoveryAdmin:
+  enabled: false
+  username: admin
+
+extraEnv:
+  STALWART_PUBLIC_URL: https://mail.example.invalid
+
+extraSecretEnv:
+  STALWART_DB_PASSWORD: ci-database-password
+
+config:
+  "@type": "PostgreSql"
+  host: postgres.example.invalid
+  port: 5432
+  database: mail
+  authUsername: mail
+  authSecret:
+    "@type": "EnvironmentVariable"
+  useTls: true
+
+persistence:
+  enabled: false
+
+ingress:
+  enabled: false
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 2000
+  runAsGroup: 2000
+  fsGroup: 2000
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+    add:
+      - NET_BIND_SERVICE
+  seccompProfile:
+    type: RuntimeDefault
