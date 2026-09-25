@@ -126,4 +126,9 @@ persistence:
 {{- $_ := mergeOverwrite .Values (include "paperless-ngx.commonValues" . | fromYaml) -}}
 
 {{/* Render the templates */}}
+{{- /* Hide subchart values from the loader: common >= 5.2 runs tpl on every
+       string in .Values, which breaks on subchart templates like postgresql metrics. */ -}}
+{{- $values := .Values -}}
+{{- $_ := set . "Values" (omit .Values "postgresql" "mariadb") -}}
 {{ include "bjw-s.common.loader.all" . }}
+{{- $_ = set . "Values" $values -}}
