@@ -193,4 +193,9 @@ persistence:
 {{- $_ := mergeOverwrite .Values (include "documenso.commonValues" . | fromYaml) -}}
 
 {{/* Render the common library templates. */}}
+{{- /* Hide subchart values from the loader: common >= 5.2 runs tpl on every
+       string in .Values, which breaks on subchart templates like postgresql metrics. */ -}}
+{{- $values := .Values -}}
+{{- $_ := set . "Values" (omit .Values "postgresql") -}}
 {{ include "bjw-s.common.loader.all" . }}
+{{- $_ = set . "Values" $values -}}
