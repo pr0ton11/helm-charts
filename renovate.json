@@ -21,16 +21,6 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/charts/mediumauth/Chart\\.yaml$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
-      ],
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
         "/charts/stalwart/Chart\\.yaml$/"
       ],
       "matchStrings": [
@@ -43,7 +33,8 @@
       "description": "Deprecated charts no longer receive updates",
       "matchFileNames": [
         "charts/grist/**",
-        "charts/documenso/**"
+        "charts/documenso/**",
+        "charts/mediumauth/**"
       ],
       "enabled": false
     },
@@ -56,23 +47,6 @@
         {
           "filePatterns": [
             "charts/paperless-ngx/Chart.yaml"
-          ],
-          "matchStrings": [
-            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
-          ],
-          "bumpType": "patch"
-        }
-      ]
-    },
-    {
-      "matchPackageNames": [
-        "ghcr.io/pr0ton11/mediumauth"
-      ],
-      "groupName": "mediumauth app",
-      "bumpVersions": [
-        {
-          "filePatterns": [
-            "charts/mediumauth/Chart.yaml"
           ],
           "matchStrings": [
             "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"

@@ -6,7 +6,6 @@ Personal Helm chart repository for self-hosted applications without an actively 
 
 | Chart | App Version | Notes |
 | --- | --- | --- |
-| `mediumauth` | `0.2.0` | Mediumauth with encrypted database-managed configuration, forward authentication, OAuth, LDAP, and OIDC support. |
 | `paperless-ngx` | `3.2.1` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
 | `stalwart` | `v0.16.23` | Based on `kgrubb/stalwart-helm-chart` and kept values-compatible for existing deployments. |
 
@@ -18,6 +17,7 @@ These charts are no longer maintained or updated. The last published versions re
 | --- | --- | --- |
 | `documenso` | `0.1.2` | `2.18.0` |
 | `grist` | `0.1.3` | `1.7.19` |
+| `mediumauth` | `0.2.2` | `0.2.0` |
 
 ## OCI Usage
 
@@ -25,7 +25,6 @@ Charts are published to GitHub Container Registry by CI:
 
 ```console
 helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx
-helm install mediumauth oci://ghcr.io/pr0ton11/charts/mediumauth -f values.yaml
 helm install stalwart oci://ghcr.io/pr0ton11/charts/stalwart -f values.yaml
 ```
 

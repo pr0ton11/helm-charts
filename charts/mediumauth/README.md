@@ -1,6 +1,8 @@
 # Mediumauth
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat)
+This chart is deprecated and no longer maintained. The application repository is archived. Existing chart versions remain available.
+
+![Version: 0.2.2](https://img.shields.io/badge/Version-0.2.2-informational?style=flat)
 ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat)
 ![AppVersion: 0.2.0](https://img.shields.io/badge/AppVersion-0.2.0-informational?style=flat)
 
