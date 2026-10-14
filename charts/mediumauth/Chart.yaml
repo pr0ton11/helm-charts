@@ -4,7 +4,8 @@ description: "A small authentication server with dynamic local-user management"
 home: https://github.com/pr0ton11/mediumauth
 icon: https://raw.githubusercontent.com/pr0ton11/mediumauth/d9e6240/assets/logo.png
 type: application
-version: 0.2.1
+version: 0.2.2
+deprecated: true
 # renovate: datasource=docker depName=ghcr.io/pr0ton11/mediumauth
 appVersion: 0.2.0
 kubeVersion: ">=1.31.0-0"
@@ -21,6 +22,8 @@ sources:
   - https://github.com/pr0ton11/mediumauth
 annotations:
   artifacthub.io/changes: |-
+    - kind: deprecated
+      description: Deprecate Mediumauth because the application repository is archived
     - kind: added
       description: Add a Mediumauth v0.2.0 application chart
     - kind: added
