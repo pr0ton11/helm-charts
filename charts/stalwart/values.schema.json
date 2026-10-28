@@ -64,6 +64,38 @@
       "type": "object",
       "additionalProperties": { "type": "string" }
     },
+    "extraEnvFrom": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "prefix": { "type": "string" },
+          "secretRef": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "optional": { "type": "boolean" }
+            },
+            "required": ["name"]
+          },
+          "configMapRef": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "optional": { "type": "boolean" }
+            },
+            "required": ["name"]
+          }
+        },
+        "oneOf": [
+          { "required": ["secretRef"] },
+          { "required": ["configMapRef"] }
+        ]
+      }
+    },
     "extraSecretEnv": {
       "type": "object",
       "additionalProperties": { "type": "string" }

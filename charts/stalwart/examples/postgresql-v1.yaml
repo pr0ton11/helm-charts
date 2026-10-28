@@ -1,0 +1,27 @@
+# Apply after the existing release values, only after the final migration succeeds.
+# Replace the host with the PostgreSQL server used by the migration target.
+image:
+  tag: v1.0.0
+
+config:
+  "@type": PostgreSql
+  host: postgres.example.invalid
+  port: 5432
+  database: stalwart
+  authUsername: stalwart
+  authSecret:
+    "@type": EnvironmentVariable
+    variableName: TARGET_DB_PASSWORD
+  useTls: true
+  allowInvalidCerts: false
+  poolMaxConnections: 10
+
+extraEnvFrom:
+  - secretRef:
+      name: stalwart-migration-db
+
+persistence:
+  enabled: false
+
+bootstrap:
+  enabled: false

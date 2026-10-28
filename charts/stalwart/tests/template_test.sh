@@ -95,3 +95,28 @@ helm template stalwart "$chart" --values "$fixture" \
   --set 'ingress.hosts[0].paths[0].pathType=Prefix' \
   --set 'ingress.hosts[0].paths[0].portName=mgmt' >"$test_dir/ingress.yaml"
 grep -F 'kind: Ingress' "$test_dir/ingress.yaml"
+
+# The migration overlay uses an existing target Secret without creating a new one.
+helm template stalwart "$chart" \
+  --values "$chart/examples/postgresql-v1.yaml" >"$test_dir/v1.yaml"
+grep -F 'image: "stalwartlabs/stalwart:v1.0.0"' "$test_dir/v1.yaml"
+grep -F 'name: stalwart-migration-db' "$test_dir/v1.yaml"
+grep -F '"variableName": "TARGET_DB_PASSWORD"' "$test_dir/v1.yaml"
+if grep -F 'kind: Secret' "$test_dir/v1.yaml"; then
+  echo "Existing target credentials must not create a chart-managed Secret" >&2
+  exit 1
+fi
+
+# Existing credentials remain available alongside the target database Secret.
+helm template stalwart "$chart" --values "$fixture" \
+  --values "$chart/examples/postgresql-v1.yaml" >"$test_dir/v1-existing.yaml"
+grep -A5 'envFrom:' "$test_dir/v1-existing.yaml" >"$test_dir/env-from.yaml"
+grep -F 'name: stalwart-env' "$test_dir/env-from.yaml"
+grep -F 'name: stalwart-migration-db' "$test_dir/env-from.yaml"
+
+# Reject an empty Secret reference before deployment.
+if helm template stalwart "$chart" \
+  --set-json 'extraEnvFrom=[{"secretRef":{"name":""}}]' >/dev/null 2>&1; then
+  echo "Expected an empty environment Secret name to fail" >&2
+  exit 1
+fi

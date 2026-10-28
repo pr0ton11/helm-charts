@@ -5,9 +5,10 @@ nameOverride: ""
 fullnameOverride: ""
 
 # Container image.
+# Migrate pre-1.0 databases before starting v1.0.0. See the chart README.
 image:
   repository: stalwartlabs/stalwart
-  tag: "v0.16.27"
+  tag: "v1.0.0"
   pullPolicy: IfNotPresent
 
 # Number of pods in the StatefulSet.
@@ -43,6 +44,10 @@ recoveryMode:
 
 # Extra environment variables injected into the container.
 extraEnv: {}
+
+# Additional Kubernetes envFrom references for existing Secrets or ConfigMaps.
+# These follow the chart-managed Secret. Keep variable names distinct.
+extraEnvFrom: []
 
 # Extra environment variables injected from the managed Secret.
 extraSecretEnv: {}
