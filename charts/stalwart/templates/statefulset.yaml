@@ -64,10 +64,16 @@ spec:
             {{- include "stalwart.recoveryAdmin.env" . | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- if or (not (empty .Values.extraSecretEnv)) (and (include "stalwart.recoveryAdminOnPod" .) (not .Values.recoveryAdmin.existingSecret) .Values.recoveryAdmin.password) }}
+          {{- $managedEnv := or (not (empty .Values.extraSecretEnv)) (and (include "stalwart.recoveryAdminOnPod" .) (not .Values.recoveryAdmin.existingSecret) .Values.recoveryAdmin.password) }}
+          {{- if or $managedEnv .Values.extraEnvFrom }}
           envFrom:
+            {{- if $managedEnv }}
             - secretRef:
                 name: {{ include "stalwart.fullname" . }}-env
+            {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- end }}
           ports:
             - name: smtp

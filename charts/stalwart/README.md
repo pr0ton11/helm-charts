@@ -20,6 +20,34 @@ Changes that affect running releases:
 - Pods get the `app.kubernetes.io/component: server` label, and Services select on it. The StatefulSet selector does not change.
 - Probes run `curl` inside the container against the management listener, and a startup probe allows up to five minutes for startup.
 
+## Upgrading from Stalwart 0.16
+
+Stalwart 1.0 cannot open a database from an earlier release.
+A Helm upgrade alone does not migrate the database.
+Keep the source on 0.16.27 and use [stalwart-migrate](https://stalw.art/docs/migration/upgrade-0-16/) to copy it into a new database.
+
+1. Back up the source database, Helm values, and Secrets.
+2. Create an empty target database owned by its Stalwart login role.
+3. Run `prepare` and incremental copies with a persistent migration state directory.
+4. Stop all source pods before the final copy.
+5. Complete the final copy and review the migration report.
+6. Start v1.0.0 with the target database and its credentials.
+
+Use [examples/postgresql-v1.yaml](examples/postgresql-v1.yaml) as an additional values file after the existing deployment values.
+Replace its database host before use.
+The example reads `TARGET_DB_PASSWORD` from an existing Secret named `stalwart-migration-db`.
+Create that Secret in the release namespace.
+Do not store the password in the values file.
+
+Keep the existing release name, Services, and other deployment values during the switch.
+Disable bootstrap hooks when starting a migrated database.
+Keep the source database and migration state until the upgrade is accepted.
+After v1 accepts mail, a Helm rollback alone cannot return that mail to the source database.
+
+The example keeps blobs in PostgreSQL.
+Move blobs to S3 in a separate operation after the version migration.
+See the [official migration guide](https://stalw.art/docs/migration/upgrade-0-16/) for verification and rollback limits.
+
 ## Values
 
 | Key | Default | Notes |
@@ -27,7 +55,8 @@ Changes that affect running releases:
 | `nameOverride` | `""` | Override the chart name |
 | `fullnameOverride` | `""` | Override the resource name prefix |
 | `image.repository` | `stalwartlabs/stalwart` | Container image |
-| `image.tag` | chart `appVersion` | Pin for controlled upgrades |
+| `image.tag` | `v1.0.0` | Pin for controlled upgrades |
+| `extraEnvFrom` | `[]` | Existing Secret or ConfigMap references for the server container |
 | `replicaCount` | `1` | Keep at `1` for local RocksDB |
 | `recoveryAdmin.enabled` | `false` | Enable for first bootstrap only |
 | `recoveryAdmin.existingSecret` | `""` | Pre-created Secret for recovery admin credentials |

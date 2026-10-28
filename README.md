@@ -7,7 +7,7 @@ Personal Helm chart repository for self-hosted applications without an actively 
 | Chart | App Version | Notes |
 | --- | --- | --- |
 | `paperless-ngx` | `3.2.1` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
-| `stalwart` | `v0.16.23` | Based on `kgrubb/stalwart-helm-chart` and kept values-compatible for existing deployments. |
+| `stalwart` | `v1.0.0` | Based on `kgrubb/stalwart-helm-chart` and kept values-compatible for existing deployments. |
 
 ### Deprecated
 
