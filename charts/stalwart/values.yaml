@@ -8,7 +8,7 @@ fullnameOverride: ""
 # Migrate pre-1.0 databases before starting v1.0.0. See the chart README.
 image:
   repository: stalwartlabs/stalwart
-  tag: "v1.0.0"
+  tag: "v1.0.1"
   pullPolicy: IfNotPresent
 
 # Number of pods in the StatefulSet.
