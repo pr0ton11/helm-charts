@@ -1,0 +1,30 @@
+# Replace the placeholder hostnames, S3 configuration, and Gateway references.
+# Create DNS records and Secrets before installation.
+# The chart fixes both backend Services to IPv4, including on dual-stack clusters.
+# The shared gateway can still accept IPv4 and IPv6 client connections.
+existingSecret: monoscope-env
+hostUrl: https://monoscope.example.invalid/
+s3:
+  bucket: monoscope
+  endpoint: https://s3.example.invalid
+  region: us-east-1
+  existingSecret: monoscope-s3
+gateway:
+  enabled: true
+  parentRefs:
+    - name: public-gateway
+      namespace: gateway-system
+      sectionName: https
+  hostnames: [monoscope.example.invalid]
+  # Enable for clients outside the cluster. Use otlp.example.invalid:443 with TLS.
+  grpc:
+    enabled: false
+    parentRefs:
+      - name: public-gateway
+        namespace: gateway-system
+        sectionName: https
+    hostnames: [otlp.example.invalid]
+timefusion:
+  persistence:
+    storageClass: local-path
+    size: 50Gi

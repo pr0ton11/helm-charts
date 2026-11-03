@@ -1,0 +1,20 @@
+existingSecret: monoscope-env
+hostUrl: https://monoscope.example.invalid/
+s3:
+  bucket: monoscope-ci
+  endpoint: https://s3.example.invalid
+  existingSecret: monoscope-s3
+gateway:
+  enabled: true
+  parentRefs:
+    - name: public-gateway
+      namespace: gateway-system
+      sectionName: https
+  hostnames: [monoscope.example.invalid]
+  grpc:
+    enabled: true
+    parentRefs:
+      - name: public-gateway
+        namespace: gateway-system
+        sectionName: https
+    hostnames: [otlp.example.invalid]

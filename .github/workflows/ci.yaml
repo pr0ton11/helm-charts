@@ -62,6 +62,9 @@ jobs:
       - name: Run Stalwart chart tests
         run: charts/stalwart/tests/template_test.sh
 
+      - name: Run Monoscope chart tests
+        run: bash charts/monoscope/tests/template_test.sh
+
       - name: Render Paperless-ngx default values
         run: helm template paperless-ngx charts/paperless-ngx --set 'env.PAPERLESS_SECRET_KEY=ci-secret-key'
 

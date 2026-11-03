@@ -8,6 +8,7 @@ Personal Helm chart repository for self-hosted applications without an actively 
 | --- | --- | --- |
 | `paperless-ngx` | `3.2.1` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
 | `stalwart` | `v1.0.0` | Based on `kgrubb/stalwart-helm-chart` and kept values-compatible for existing deployments. |
+| [`monoscope`](charts/monoscope/README.md) | `42dbae0` | External TimescaleDB, S3 storage, and optional chart-managed TimeFusion. |
 
 ### Deprecated
 

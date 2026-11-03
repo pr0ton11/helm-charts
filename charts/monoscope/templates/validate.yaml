@@ -1,0 +1,22 @@
+{{- $_ := required "existingSecret is required (see README.md for keys)" .Values.existingSecret -}}
+{{- $_ := required "s3.bucket is required" .Values.s3.bucket -}}
+{{- $_ := required "s3.existingSecret is required" .Values.s3.existingSecret -}}
+{{- $_ := required "s3.endpoint is required" .Values.s3.endpoint -}}
+{{- $_ := required "s3.region is required" .Values.s3.region -}}
+{{- if and (hasPrefix "http://" .Values.s3.endpoint) (not .Values.s3.allowHttp) -}}
+{{- fail "An HTTP S3 endpoint requires s3.allowHttp=true" -}}
+{{- end -}}
+{{- if and .Values.gateway.enabled .Values.ingress.enabled -}}
+{{- fail "Enable gateway or ingress, not both" -}}
+{{- end -}}
+{{- if .Values.gateway.enabled -}}
+{{- $_ := required "gateway.parentRefs is required" .Values.gateway.parentRefs -}}
+{{- $_ := required "gateway.hostnames is required" .Values.gateway.hostnames -}}
+{{- end -}}
+{{- if .Values.gateway.grpc.enabled -}}
+{{- $_ := required "gateway.grpc.parentRefs is required" .Values.gateway.grpc.parentRefs -}}
+{{- $_ := required "gateway.grpc.hostnames is required" .Values.gateway.grpc.hostnames -}}
+{{- end -}}
+{{- if .Values.ingress.enabled -}}
+{{- $_ := required "ingress.hostname is required" .Values.ingress.hostname -}}
+{{- end -}}

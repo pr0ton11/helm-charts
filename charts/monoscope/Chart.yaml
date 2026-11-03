@@ -1,0 +1,11 @@
+apiVersion: v2
+name: monoscope
+description: Monoscope observability with external TimescaleDB and S3-backed TimeFusion
+type: application
+version: 0.1.0
+appVersion: "42dbae031d695700f4c910ebb906b1e29a58e161"
+home: https://github.com/monoscope-tech/monoscope
+sources:
+  - https://github.com/monoscope-tech/monoscope
+  - https://github.com/monoscope-tech/timefusion
+kubeVersion: ">=1.31.0-0"
