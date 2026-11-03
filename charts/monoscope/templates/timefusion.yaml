@@ -1,0 +1,154 @@
+{{- if .Values.timefusion.enabled }}
+{{- $name := printf "%s-timefusion" (include "monoscope.fullname" .) }}
+{{- if not .Values.timefusion.persistence.existingClaim }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "monoscope.labels" . | nindent 4 }}
+  {{- if .Values.timefusion.persistence.retain }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- if ne .Values.timefusion.persistence.storageClass "" }}
+  storageClassName: {{ .Values.timefusion.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.timefusion.persistence.size }}
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "monoscope.labels" . | nindent 4 }}
+spec:
+  # TimeFusion binds IPv4 only. Do not inherit an IPv6-primary cluster default.
+  ipFamilyPolicy: SingleStack
+  ipFamilies: [IPv4]
+  selector:
+    {{- include "monoscope.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: timefusion
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "monoscope.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "monoscope.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: timefusion
+  template:
+    metadata:
+      labels:
+        {{- include "monoscope.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: timefusion
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 180
+      securityContext:
+        {{- toYaml .Values.timefusion.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: timefusion
+          image: {{ include "monoscope.image" .Values.timefusion.image | quote }}
+          imagePullPolicy: {{ .Values.timefusion.image.pullPolicy }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          securityContext:
+            {{- toYaml .Values.timefusion.securityContext | nindent 12 }}
+          env:
+            - name: PGWIRE_PORT
+              value: "5432"
+            - name: PGWIRE_USER
+              value: {{ .Values.timefusion.username | quote }}
+            - name: PGWIRE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret }}
+                  key: PGWIRE_PASSWORD
+            - name: AWS_S3_BUCKET
+              value: {{ .Values.s3.bucket | quote }}
+            - name: AWS_S3_ENDPOINT
+              value: {{ .Values.s3.endpoint | quote }}
+            - name: AWS_ENDPOINT_URL
+              value: {{ .Values.s3.endpoint | quote }}
+            - name: AWS_REGION
+              value: {{ .Values.s3.region | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.s3.region | quote }}
+            - name: AWS_ALLOW_HTTP
+              value: {{ .Values.s3.allowHttp | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.existingSecret }}
+                  key: {{ .Values.s3.accessKeyKey }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.existingSecret }}
+                  key: {{ .Values.s3.secretKeyKey }}
+            - name: TIMEFUSION_DATA_DIR
+              value: /app/data/timefusion
+            - name: TIMEFUSION_FOYER_DISABLED
+              value: "true"
+            - name: OTEL_SDK_DISABLED
+              value: "true"
+            {{- with .Values.timefusion.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /app/data/timefusion
+          # Use the built-in loopback probe because Pod IPs can be IPv6-primary.
+          # It accepts the temporary 57P03 response during WAL recovery.
+          startupProbe:
+            exec:
+              command: [/usr/local/bin/timefusion, healthcheck]
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 90
+          readinessProbe:
+            exec:
+              command: [/usr/local/bin/timefusion, healthcheck]
+            timeoutSeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.timefusion.resources | nindent 12 }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ default $name .Values.timefusion.persistence.existingClaim }}
+      {{- with .Values.timefusion.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.timefusion.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.timefusion.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

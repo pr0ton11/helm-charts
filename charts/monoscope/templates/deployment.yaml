@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "monoscope.fullname" . }}
+  labels:
+    {{- include "monoscope.labels" . | nindent 4 }}
+spec:
+  # Startup migrations and background jobs run in the app process.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "monoscope.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      labels:
+        {{- include "monoscope.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: app
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 120
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: monoscope
+          image: {{ include "monoscope.image" .Values.image | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: otlp-grpc
+              containerPort: 4317
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- range $key := list "DATABASE_URL" "API_KEY_ENCRYPTION_SECRET_KEY" "BASIC_AUTH_PASSWORD" "TIMEFUSION_PG_URL" }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.existingSecret }}
+                  key: {{ $key }}
+            {{- end }}
+            - name: BASIC_AUTH_USERNAME
+              value: {{ .Values.basicAuthUsername | quote }}
+            - name: HOST_URL
+              value: {{ .Values.hostUrl | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.s3.bucket | quote }}
+            - name: S3_ENDPOINT
+              value: {{ .Values.s3.endpoint | quote }}
+            - name: S3_REGION
+              value: {{ .Values.s3.region | quote }}
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.existingSecret }}
+                  key: {{ .Values.s3.accessKeyKey }}
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.existingSecret }}
+                  key: {{ .Values.s3.secretKeyKey }}
+            {{- range $key, $value := dict "PORT" "8080" "GRPC_PORT" "4317" "MIGRATIONS_DIR" "/opt/monoscope/static/migrations/" "ENVIRONMENT" "DEV" "LOGGING_DESTINATION" "StdOut" "BASIC_AUTH_ENABLED" "True" "MIGRATE_AND_INITIALIZE_ON_START" "True" "ENABLE_BACKGROUND_JOBS" "True" "ENABLE_PUBSUB_SERVICE" "False" "ENABLE_KAFKA_SERVICE" "False" "ENABLE_OTLP_GRPC_SERVICE" "True" "ENABLE_TIMEFUSION_READS" "True" "ENABLE_TIMEFUSION_WRITES" "True" "ENABLE_POSTGRES_TELEMETRY_WRITES" "False" "SHOW_DEMO_PROJECT" "False" }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          startupProbe:
+            exec: &ping
+              command:
+                - bash
+                - -ec
+                - "exec 3<>/dev/tcp/127.0.0.1/8080; printf 'GET /ping HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3; head -1 <&3 | grep -q '200 OK'"
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 90
+          readinessProbe:
+            exec: *ping
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec: *ping
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

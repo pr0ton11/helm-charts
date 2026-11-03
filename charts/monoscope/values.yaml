@@ -1,0 +1,107 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/monoscope-tech/monoscope
+  tag: "42dbae031d695700f4c910ebb906b1e29a58e161"
+  digest: sha256:29ab8e96bea7f06a020a22eed4803b88a2cfcff0b999444b7d15e80350cb1bf2
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+# Secret in the release namespace containing DATABASE_URL,
+# API_KEY_ENCRYPTION_SECRET_KEY, BASIC_AUTH_PASSWORD, TIMEFUSION_PG_URL,
+# and (for managed TimeFusion) PGWIRE_PASSWORD.
+# DATABASE_URL must point to PostgreSQL with TimescaleDB and Toolkit installed.
+existingSecret: ""
+basicAuthUsername: admin
+hostUrl: http://localhost:8080/
+
+# Both Monoscope replay storage and chart-managed TimeFusion use these settings.
+# Create the bucket beforehand. The chart does not create buckets or credentials.
+s3:
+  bucket: ""
+  endpoint: https://s3.amazonaws.com
+  region: us-east-1
+  allowHttp: false
+  existingSecret: ""
+  accessKeyKey: AWS_ACCESS_KEY_ID
+  secretKeyKey: AWS_SECRET_ACCESS_KEY
+
+# Extra Kubernetes EnvVar entries and envFrom sources for optional integrations.
+# Do not duplicate chart-managed environment variable names.
+extraEnv: []
+extraEnvFrom: []
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    memory: 4Gi
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
+service:
+  # Both application and TimeFusion Services are fixed to SingleStack IPv4.
+  # Pods can retain dual-stack addresses. The shared gateway handles public TLS.
+  type: ClusterIP
+  httpPort: 8080
+  grpcPort: 4317
+
+gateway:
+  enabled: false
+  parentRefs: []
+  hostnames: []
+  annotations: {}
+  # gRPC needs a separate hostname when sharing the HTTPS listener with HTTPRoute.
+  grpc:
+    enabled: false
+    parentRefs: []
+    hostnames: []
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hostname: ""
+  tls: []
+
+timefusion:
+  # Disable to use an external TimeFusion instance via TIMEFUSION_PG_URL.
+  enabled: true
+  image:
+    repository: ghcr.io/monoscope-tech/timefusion
+    tag: latest
+    digest: sha256:f2a31f00063ee5645ae8d9cbf8a70d7b62ec81aa49726ab14a8ce648cfd501a5
+    pullPolicy: IfNotPresent
+  username: postgres
+  persistence:
+    # WAL requires local disk with working fsync and locking. Avoid NFS.
+    storageClass: local-path
+    size: 50Gi
+    existingClaim: ""
+    retain: true
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      memory: 4Gi
+  # io_uring is required by the WAL. Set a compatible Localhost seccomp profile
+  # instead when your cluster provides one. No privileged container is needed.
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    seccompProfile:
+      type: Unconfined
+  podSecurityContext:
+    fsGroup: 65532
+    fsGroupChangePolicy: OnRootMismatch
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  extraEnv: []

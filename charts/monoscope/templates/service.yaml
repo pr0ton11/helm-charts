@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "monoscope.fullname" . }}
+  labels:
+    {{- include "monoscope.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  # The upstream gRPC listener binds 0.0.0.0, including on dual-stack clusters.
+  ipFamilyPolicy: SingleStack
+  ipFamilies: [IPv4]
+  selector:
+    {{- include "monoscope.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+  ports:
+    - name: http
+      port: {{ .Values.service.httpPort }}
+      targetPort: http
+    - name: otlp-grpc
+      port: {{ .Values.service.grpcPort }}
+      targetPort: otlp-grpc
+      appProtocol: kubernetes.io/h2c

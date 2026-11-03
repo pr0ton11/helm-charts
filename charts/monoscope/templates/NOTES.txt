@@ -1,0 +1,11 @@
+Monoscope requires a prepared external TimescaleDB database and existing Secrets.
+See charts/monoscope/README.md and charts/monoscope/docs/postgresql.md.
+
+HTTP and OTLP/HTTP: {{ include "monoscope.fullname" . }}:{{ .Values.service.httpPort }}
+OTLP/gRPC: {{ include "monoscope.fullname" . }}:{{ .Values.service.grpcPort }}
+
+For local access:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "monoscope.fullname" . }} 8080:{{ .Values.service.httpPort }}
+
+Restart the app after changing an existing Secret. Back up PostgreSQL, S3, and
+the TimeFusion WAL volume. Keep API_KEY_ENCRYPTION_SECRET_KEY stable.
