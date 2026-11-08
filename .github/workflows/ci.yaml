@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -34,6 +35,9 @@ jobs:
       - name: Build Grist dependencies
         run: helm dependency build charts/grist
 
+      - name: Build Forgejo dependencies
+        run: helm dependency build charts/forgejo
+
       - name: Build Mediumauth dependencies
         run: helm dependency build charts/mediumauth
 
@@ -58,6 +62,15 @@ jobs:
 
       - name: Run Mediumauth chart tests
         run: charts/mediumauth/tests/template_test.sh
+
+      - name: Install Forgejo sync test dependencies
+        run: python3 -m pip install PyYAML
+
+      - name: Test Forgejo upstream sync
+        run: python3 -B -m unittest discover -s tests -p test_forgejo_sync.py
+
+      - name: Test Forgejo
+        run: bash charts/forgejo/tests/template_test.sh
 
       - name: Run Stalwart chart tests
         run: charts/stalwart/tests/template_test.sh

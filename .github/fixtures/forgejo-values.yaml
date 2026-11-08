@@ -1,0 +1,36 @@
+gitea:
+  admin:
+    existingSecret: forgejo-admin
+  config:
+    database:
+      DB_TYPE: postgres
+      HOST: postgres.example.invalid:5432
+      NAME: forgejo
+      USER: forgejo
+    server:
+      DOMAIN: git.example.invalid
+      ROOT_URL: https://git.example.invalid/
+  additionalConfigFromEnvs:
+    - name: FORGEJO__database__PASSWD
+      valueFrom:
+        secretKeyRef:
+          name: forgejo-database
+          key: password
+persistence:
+  claimName: gitea-shared-storage
+  storageClass: standard
+  size: 256Gi
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: public
+      namespace: gateway-system
+      sectionName: https
+  hostnames:
+    - git.example.invalid
+tcpRoute:
+  enabled: true
+  parentRefs:
+    - name: public
+      namespace: gateway-system
+      sectionName: ssh

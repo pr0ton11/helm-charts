@@ -1,0 +1,71 @@
+name: Sync Forgejo upstream
+
+on:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forgejo-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5.0.1
+
+      - name: Install sync dependencies
+        run: python3 -m pip install PyYAML
+
+      - name: Test upstream merge behavior
+        run: python3 -B -m unittest discover -s tests -p test_forgejo_sync.py
+
+      - name: Merge the latest published upstream chart
+        run: python3 -B scripts/sync_forgejo_upstream.py
+
+      - name: Build Forgejo dependencies
+        run: helm dependency build charts/forgejo
+
+      - name: Test Forgejo
+        run: bash charts/forgejo/tests/template_test.sh
+
+      - name: Open or update the upstream sync PR
+        id: pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: automation/forgejo-upstream
+          add-paths: charts/forgejo
+          commit-message: 'chore(forgejo): integrate upstream Helm chart changes'
+          title: 'Integrate upstream Forgejo Helm chart changes'
+          body: |
+            Updates the recorded upstream chart baseline and merges its templates,
+            scripts, defaults, schema, documentation, and locked dependencies.
+
+            Preserves our application version, Renovate tracking, migration
+            instructions, and tests. Local edits are merged in three ways against
+            the previous upstream release. Conflicts stop the workflow.
+
+            Validation: upstream merge tests, dependency build, Helm lint, and
+            Forgejo template checks passed before this PR was opened.
+            The full Charts workflow is dispatched separately on this branch.
+            No application deployment or database migration is performed.
+
+      # GITHUB_TOKEN-created PRs do not trigger pull_request workflows.
+      # workflow_dispatch is allowed, so explicitly run the full Charts check.
+      - name: Run Charts CI for the PR commit
+        if: steps.pr.outputs.pull-request-operation == 'created' || steps.pr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yaml --ref automation/forgejo-upstream
