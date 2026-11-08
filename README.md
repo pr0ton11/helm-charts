@@ -1,12 +1,13 @@
 # Helm Charts
 
-Personal Helm chart repository for self-hosted applications without an actively maintained upstream chart.
+Personal Helm chart repository for self-hosted applications with independently managed chart and application updates.
 
 ## Charts
 
 | Chart | App Version | Notes |
 | --- | --- | --- |
 | `paperless-ngx` | `3.2.1` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
+| [`forgejo`](charts/forgejo/README.md) | `17.0.1` | Based on upstream chart `17.3.2`, with stable application updates independent of its LTS default. |
 | `stalwart` | `v1.0.0` | Based on `kgrubb/stalwart-helm-chart` and kept values-compatible for existing deployments. |
 
 ### Deprecated
@@ -25,6 +26,7 @@ Charts are published to GitHub Container Registry by CI:
 
 ```console
 helm install paperless-ngx oci://ghcr.io/pr0ton11/charts/paperless-ngx
+helm install forgejo oci://ghcr.io/pr0ton11/charts/forgejo -f values.yaml
 helm install stalwart oci://ghcr.io/pr0ton11/charts/stalwart -f values.yaml
 ```
 
@@ -40,7 +42,7 @@ spec:
 Renovate watches chart application image tags and opens pull requests when upstream images publish new versions.
 For application updates, the Renovate PR should update:
 
-- the chart's `values.yaml` `image.tag`
+- the chart's `values.yaml` `image.tag` when the chart pins it there (Forgejo uses `appVersion` as its single default)
 - the chart's `Chart.yaml` `appVersion`
 - the chart's `Chart.yaml` chart `version`
 

@@ -26,6 +26,16 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
       ]
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/charts/forgejo/Chart\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
@@ -71,6 +81,36 @@
           "bumpType": "patch"
         }
       ]
+    },
+    {
+      "description": "Track stable Forgejo releases, including new majors, and publish a new chart version",
+      "matchPackageNames": [
+        "code.forgejo.org/forgejo/forgejo"
+      ],
+      "groupName": "forgejo app",
+      "ignoreUnstable": true,
+      "automerge": false,
+      "bumpVersions": [
+        {
+          "filePatterns": [
+            "charts/forgejo/Chart.yaml"
+          ],
+          "matchStrings": [
+            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
+          ],
+          "bumpType": "patch"
+        }
+      ]
+    },
+    {
+      "description": "Forgejo image version is tracked through Chart.yaml appVersion",
+      "matchManagers": [
+        "helm-values"
+      ],
+      "matchFileNames": [
+        "charts/forgejo/values.yaml"
+      ],
+      "enabled": false
     }
   ]
 }
