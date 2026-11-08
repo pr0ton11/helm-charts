@@ -69,7 +69,7 @@ jobs:
         run: helm package charts/paperless-ngx charts/documenso charts/grist charts/mediumauth charts/stalwart charts/forgejo --destination .dist
 
       - name: Login to GHCR
-        uses: docker/login-action@v4.7.0
+        uses: docker/login-action@v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
