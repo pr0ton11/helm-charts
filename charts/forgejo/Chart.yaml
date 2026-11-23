@@ -2,7 +2,7 @@ apiVersion: v2
 name: forgejo
 description: Forgejo with independently managed stable application updates
 type: application
-version: 0.1.0
+version: 0.1.1
 # renovate: datasource=docker depName=code.forgejo.org/forgejo/forgejo
 appVersion: 17.0.1
 home: https://forgejo.org/
@@ -13,11 +13,11 @@ sources:
   - https://codeberg.org/forgejo/forgejo
 annotations:
   artifacthub.io/license: MIT
-  helm-charts.pr0ton11/upstream-chart-version: 17.3.2
-  helm-charts.pr0ton11/upstream-chart-digest: sha256:73accaef0604d6e701a7b141e71a8b9a007c1475807240403d8bca0aeda24b74
+  helm-charts.pr0ton11/upstream-chart-version: 17.3.3
+  helm-charts.pr0ton11/upstream-chart-digest: sha256:420f4ece79befff4c7b58afff86eda5632eede333a583571f274ddad409c6eb8
 dependencies:
-  - name: common
-    repository: oci://ghcr.io/visualon/bitnamicharts
-    tags:
-      - bitnami-common
-    version: 2.41.0
+- name: common
+  repository: oci://ghcr.io/visualon/bitnamicharts
+  tags:
+  - bitnami-common
+  version: 2.41.0
