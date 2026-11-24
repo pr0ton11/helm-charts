@@ -57,6 +57,9 @@ jobs:
       - name: Lint Grist
         run: helm lint charts/grist --values .github/fixtures/grist-values.yaml
 
+      - name: Lint Blocky
+        run: helm lint charts/blocky
+
       - name: Lint Mediumauth
         run: helm lint charts/mediumauth --values .github/fixtures/mediumauth-values.yaml
 

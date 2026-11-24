@@ -1,0 +1,11 @@
+apiVersion: v2
+name: blocky
+description: DNS proxy with blocklists, DNSSEC, and encrypted DNS
+type: application
+kubeVersion: ">=1.23.0-0"
+version: 0.1.0
+# renovate: datasource=docker depName=spx01/blocky
+appVersion: v0.37.0
+home: https://0xerr0r.github.io/blocky/
+sources:
+  - https://github.com/0xERR0R/blocky

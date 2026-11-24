@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blocky.fullname" . }}
+  labels:
+    {{- include "blocky.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ipFamilyPolicy: {{ .Values.service.ipFamilyPolicy }}
+  {{- with .Values.service.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    {{- include "blocky.selectorLabels" . | nindent 4 }}
+  ports:
+    - {name: dns-tcp, port: 53, targetPort: dns-tcp, protocol: TCP}
+    - {name: dns-udp, port: 53, targetPort: dns-udp, protocol: UDP}
+    - {name: http, port: 4000, targetPort: http, protocol: TCP}
+{{- if .Values.nativeDoH.enabled }}
+{{- $service := .Values.nativeDoH.service }}
+{{- if not (has $service.type (list "ClusterIP" "LoadBalancer")) }}
+{{- fail "nativeDoH.service.type must be ClusterIP or LoadBalancer" }}
+{{- end }}
+{{- if and (eq $service.type "LoadBalancer") (not $service.loadBalancerSourceRanges) }}
+{{- fail "nativeDoH.service.loadBalancerSourceRanges is required for a native DoH LoadBalancer" }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blocky.suffixedName" (dict "root" . "suffix" "doh") }}
+  labels:
+    {{- include "blocky.labels" . | nindent 4 }}
+  {{- with $service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ $service.type }}
+  ipFamilyPolicy: {{ $service.ipFamilyPolicy }}
+  {{- with $service.ipFamilies }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if eq $service.type "LoadBalancer" }}
+  loadBalancerSourceRanges:
+    {{- toYaml $service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  selector:
+    {{- include "blocky.selectorLabels" . | nindent 4 }}
+  ports:
+    - {name: doh-tcp, port: 443, targetPort: doh-tcp, protocol: TCP}
+    {{- if .Values.nativeDoH.http3 }}
+    - {name: doh-quic, port: 443, targetPort: doh-quic, protocol: UDP}
+    {{- end }}
+{{- end }}

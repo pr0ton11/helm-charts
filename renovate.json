@@ -11,7 +11,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/charts/paperless-ngx/Chart\\.yaml$/"
+        "/charts/(paperless-ngx|blocky)/Chart\\.yaml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+appVersion: (?<currentValue>\\S+)"
@@ -74,6 +74,22 @@
         {
           "filePatterns": [
             "charts/stalwart/Chart.yaml"
+          ],
+          "matchStrings": [
+            "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
+          ],
+          "bumpType": "patch"
+        }
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "spx01/blocky"
+      ],
+      "bumpVersions": [
+        {
+          "filePatterns": [
+            "charts/blocky/Chart.yaml"
           ],
           "matchStrings": [
             "version:\\s(?<version>\\d+\\.\\d+\\.\\d+)"
