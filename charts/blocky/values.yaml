@@ -1,0 +1,70 @@
+image:
+  repository: spx01/blocky
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+resources: {}
+
+service:
+  ipFamilyPolicy: PreferDualStack
+  ipFamilies: []
+
+gateway:
+  enabled: false
+  parentRefs: []
+  hostnames: []
+  advertiseHTTP3: false
+
+nativeDoH:
+  enabled: false
+  http3: true
+  tlsSecretName: ""
+  service:
+    type: ClusterIP
+    annotations: {}
+    ipFamilyPolicy: PreferDualStack
+    ipFamilies: []
+    loadBalancerSourceRanges: []
+
+upstreams:
+  groups:
+    default:
+      - "tcp-tls:[2001:1620:2777:1::10]:853#ns10.init7.net"
+      - "tcp-tls:[2001:1620:2777:2::20]:853#ns20.init7.net"
+
+dnssec:
+  validate: true
+
+blocking:
+  blockType: NXDOMAIN
+  denylists:
+    ads:
+      - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/light.txt
+  clientGroupsBlock:
+    default: [ads]
+  loading:
+    refreshPeriod: 4h
+
+caching:
+  minTime: 0s
+  maxTime: 1h
+  maxItemsCount: 10000
+  prefetching: false
+
+queryLog:
+  type: sqlite
+  logRetentionDays: 7
+  flushInterval: 30s
+  fields: [clientName, question, responseReason]
+  ignore:
+    sudn: true
+    domains: []
+    clients: []
+  databaseSecret:
+    name: ""
+    key: dsn
+  sqlite:
+    existingClaim: ""
+    storageClassName: local-path
+    size: 1Gi

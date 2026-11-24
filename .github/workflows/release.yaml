@@ -65,8 +65,11 @@ jobs:
       - name: Lint Stalwart
         run: helm lint charts/stalwart --values .github/fixtures/stalwart-values.yaml
 
+      - name: Lint Blocky
+        run: helm lint charts/blocky
+
       - name: Package
-        run: helm package charts/paperless-ngx charts/documenso charts/grist charts/mediumauth charts/stalwart charts/forgejo --destination .dist
+        run: helm package charts/paperless-ngx charts/documenso charts/grist charts/mediumauth charts/stalwart charts/forgejo charts/blocky --destination .dist
 
       - name: Login to GHCR
         uses: docker/login-action@v4.8.0

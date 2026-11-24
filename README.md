@@ -6,6 +6,7 @@ Personal Helm chart repository for self-hosted applications with independently m
 
 | Chart | App Version | Notes |
 | --- | --- | --- |
+| [`blocky`](charts/blocky/README.md) | `v0.37.0` | DNS filtering with DNSSEC, DoH, and persistent query logs. |
 | `paperless-ngx` | `3.2.1` | Based on `gabe565/charts` `paperless-ngx` and kept values-compatible for existing deployments. |
 | [`forgejo`](charts/forgejo/README.md) | `17.0.1` | Based on upstream chart `17.3.2`, with stable application updates independent of its LTS default. |
 | `stalwart` | `v1.0.0` | Based on `kgrubb/stalwart-helm-chart` and kept values-compatible for existing deployments. |

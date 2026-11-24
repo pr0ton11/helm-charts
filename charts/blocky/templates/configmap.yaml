@@ -1,0 +1,19 @@
+{{- $log := .Values.queryLog }}
+{{- if not (has $log.type (list "sqlite" "postgresql" "timescale" "none")) }}
+{{- fail "queryLog.type must be sqlite, postgresql, timescale, or none" }}
+{{- end }}
+{{- if and (eq $log.type "sqlite") (ne (int .Values.replicaCount) 1) }}
+{{- fail "queryLog.type=sqlite requires replicaCount=1" }}
+{{- end }}
+{{- if and (eq $log.type "timescale") (lt (int $log.logRetentionDays) 1) }}
+{{- fail "queryLog.type=timescale requires a positive queryLog.logRetentionDays" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blocky.fullname" . }}
+  labels:
+    {{- include "blocky.labels" . | nindent 4 }}
+data:
+  config.yml: |
+    {{- include "blocky.config" . | nindent 4 }}

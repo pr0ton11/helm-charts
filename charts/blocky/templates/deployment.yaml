@@ -1,0 +1,109 @@
+{{- $name := include "blocky.fullname" . }}
+{{- $sqlite := eq .Values.queryLog.type "sqlite" }}
+{{- $externalDB := has .Values.queryLog.type (list "postgresql" "timescale") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "blocky.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "blocky.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "blocky.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include "blocky.config" . | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 100
+        fsGroup: 100
+        {{- if .Values.nativeDoH.enabled }}
+        sysctls:
+          - name: net.ipv4.ip_unprivileged_port_start
+            value: "443"
+        {{- end }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: blocky
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--config", "/etc/blocky/config/config.yml", "serve"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - {name: dns-tcp, containerPort: 1053, protocol: TCP}
+            - {name: dns-udp, containerPort: 1053, protocol: UDP}
+            - {name: http, containerPort: 4000, protocol: TCP}
+            {{- if .Values.nativeDoH.enabled }}
+            - {name: doh-tcp, containerPort: 443, protocol: TCP}
+            {{- if .Values.nativeDoH.http3 }}
+            - {name: doh-quic, containerPort: 443, protocol: UDP}
+            {{- end }}
+            {{- end }}
+          startupProbe:
+            tcpSocket:
+              port: dns-tcp
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket:
+              port: dns-tcp
+          livenessProbe:
+            tcpSocket:
+              port: dns-tcp
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/blocky/config
+              readOnly: true
+            {{- if .Values.nativeDoH.enabled }}
+            - name: tls
+              mountPath: /etc/blocky/tls
+              readOnly: true
+            {{- end }}
+            {{- if $sqlite }}
+            - name: logs
+              mountPath: /logs
+            {{- end }}
+            {{- if $externalDB }}
+            - name: database
+              mountPath: /etc/blocky/database
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ $name }}
+        {{- if .Values.nativeDoH.enabled }}
+        - name: tls
+          secret:
+            secretName: {{ required "nativeDoH.tlsSecretName is required for native DoH" .Values.nativeDoH.tlsSecretName | quote }}
+        {{- end }}
+        {{- if $sqlite }}
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ .Values.queryLog.sqlite.existingClaim | default $name | quote }}
+        {{- end }}
+        {{- if $externalDB }}
+        - name: database
+          secret:
+            secretName: {{ required "queryLog.databaseSecret.name is required for an external database" .Values.queryLog.databaseSecret.name | quote }}
+            items:
+              - key: {{ required "queryLog.databaseSecret.key is required for an external database" .Values.queryLog.databaseSecret.key | quote }}
+                path: dsn
+        {{- end }}
